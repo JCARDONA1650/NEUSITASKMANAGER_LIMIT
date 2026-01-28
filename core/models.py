@@ -278,21 +278,38 @@ class Daily(models.Model):
 
     @property
     def within_time_range(self) -> bool:
-        """
-        True si el daily fue creado dentro del rango DAILY_START_HOUR/DAILY_END_HOUR.
-        """
+        try:
+            settings_obj = DailySettings.objects.first()
+            if not settings_obj:
+                return True  # si no hay config, no bloquea
+        except Exception:
+            return True
+
         created_local = timezone.localtime(self.created_at)
+        tz = timezone.get_current_timezone()
 
         start_dt = timezone.make_aware(
-            datetime.combine(self.date, time(settings.DAILY_START_HOUR, 0)),
-            timezone.get_current_timezone(),
+            datetime.combine(self.date, time(settings_obj.start_hour, 0)),
+            tz,
         )
         end_dt = timezone.make_aware(
-            datetime.combine(self.date, time(settings.DAILY_END_HOUR, 0)),
-            timezone.get_current_timezone(),
+            datetime.combine(self.date, time(settings_obj.end_hour, 0)),
+            tz,
         )
-        return start_dt <= created_local <= end_dt
 
+        return start_dt <= created_local <= end_dt
+from django.db import models
+
+class DailySettings(models.Model):
+    start_hour = models.PositiveSmallIntegerField(default=5)
+    end_hour = models.PositiveSmallIntegerField(default=9)
+
+    def __str__(self):
+        return f"Horario Daily: {self.start_hour}:00 - {self.end_hour}:00"
+
+    class Meta:
+        verbose_name = "Configuración Daily"
+        verbose_name_plural = "Configuración Daily"
 
 class Availability(models.Model):
     """Represents an availability or meeting event for a user."""

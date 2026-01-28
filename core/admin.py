@@ -281,17 +281,6 @@ class SubTaskAdmin(admin.ModelAdmin):
 
 
 # =========================================================
-# DAILY
-# =========================================================
-@admin.register(Daily)
-class DailyAdmin(admin.ModelAdmin):
-    list_display = ("user", "date", "within_time_range", "created_at")
-    list_filter = ("date", "user")
-    search_fields = ("user__username",)
-    readonly_fields = ("created_at",)
-
-
-# =========================================================
 # AVAILABILITY
 # =========================================================
 @admin.register(Availability)
@@ -299,3 +288,27 @@ class AvailabilityAdmin(admin.ModelAdmin):
     list_display = ("user", "title", "start_datetime", "end_datetime")
     list_filter = ("user",)
     search_fields = ("title", "user__username")
+
+from django.contrib import admin
+from core.models import Daily, DailySettings
+
+
+@admin.register(Daily)
+class DailyAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "date",
+        "created_at",
+        "within_time_range",
+    )
+    list_filter = ("date", "user")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(DailySettings)
+class DailySettingsAdmin(admin.ModelAdmin):
+    list_display = ("start_hour", "end_hour")
+
+    def has_add_permission(self, request):
+        # Solo permitir 1 registro
+        return not DailySettings.objects.exists()
