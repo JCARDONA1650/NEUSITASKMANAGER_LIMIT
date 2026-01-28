@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Eliminar usuario{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/users/user_confirm_delete.css' %}">
+{% endblock %}
+{% block content %}
+<div class="card p-3" style="max-width: 720px;">
+  <h3 class="mb-2">Confirmar eliminación</h3>
+
+  <div class="alert alert-danger">
+    <div class="fw-semibold">¿Seguro que deseas eliminar este usuario?</div>
+    <div>Esta acción es permanente y el usuario perderá acceso.</div>
+  </div>
+
+  <div class="mb-3">
+    <div><span style="opacity:.75;">Username:</span> <span class="fw-semibold">{{ obj.username }}</span></div>
+    <div><span style="opacity:.75;">Nombre:</span> {{ obj.first_name }} {{ obj.last_name }}</div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="d-flex gap-2">
+      <button class="btn btn-danger" type="submit">Sí, eliminar</button>
+      <a class="btn btn-outline-secondary" href="{% url 'user_list' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

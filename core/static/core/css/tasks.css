@@ -1,0 +1,190 @@
+/* --------------------------------------------------
+   TASKS / BACKLOG (Azure-ish organized)
+-------------------------------------------------- */
+@import url("partials.css");
+.neu-page{
+  padding-bottom: 1rem;
+}
+
+.neu-page-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.neu-title{
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: .2px;
+}
+
+.neu-subtitle{
+  margin: .35rem 0 0;
+  color: rgba(234,231,242,.72);
+}
+
+.neu-filters{
+  border-radius: 18px;
+}
+
+/* Accordion project */
+.neu-accordion .neu-acc-item{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 42px rgba(0,0,0,.25);
+  margin-bottom: 14px;
+}
+
+.neu-acc-btn{
+  background: rgba(255,255,255,.04) !important;
+  color: rgba(234,231,242,.92) !important;
+  border: 0 !important;
+  padding: 1rem 1rem;
+}
+
+.neu-acc-btn:focus{
+  box-shadow: 0 0 0 .25rem rgba(182,107,255,.14) !important;
+}
+
+.neu-dot-sm{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #b66bff;
+  box-shadow: 0 0 0 4px rgba(182,107,255,.16);
+  display: inline-block;
+}
+
+.neu-project-name{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.neu-project-meta{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.neu-pill{
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(234,231,242,.86);
+  font-weight: 600;
+  font-size: .82rem;
+}
+
+.neu-pill-new{ border-color: rgba(99,102,241,.35); }
+.neu-pill-progress{ border-color: rgba(245,158,11,.35); }
+.neu-pill-done{ border-color: rgba(34,197,94,.35); }
+
+/* Inner accordion (status) */
+.neu-inner-accordion .neu-acc-subitem{
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.neu-acc-btn-sm{
+  background: rgba(255,255,255,.03) !important;
+  color: rgba(234,231,242,.92) !important;
+  padding: .75rem 1rem !important;
+}
+
+.neu-section-title{
+  font-weight: 800;
+}
+
+.neu-count-badge{
+  margin-left: .6rem;
+  font-size: .8rem;
+  font-weight: 800;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(234,231,242,.9);
+}
+
+/* Table */
+.neu-table{
+  background: transparent;
+  margin-top: .25rem;
+}
+
+.neu-table thead th{
+  font-weight: 700;
+  color: rgba(234,231,242,.72);
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+.neu-table td{
+  color: rgba(234,231,242,.92);
+}
+
+.neu-td-title .neu-td-sub{
+  font-size: .85rem;
+  color: rgba(234,231,242,.64);
+}
+
+.neu-muted{
+  color: rgba(234,231,242,.55);
+}
+
+.neu-badge{
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: .18rem .55rem;
+  font-weight: 800;
+  font-size: .78rem;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+
+.neu-badge-new{
+  border-color: rgba(99,102,241,.40);
+  background: rgba(99,102,241,.12);
+}
+
+.neu-badge-progress{
+  border-color: rgba(245,158,11,.45);
+  background: rgba(245,158,11,.12);
+}
+
+.neu-badge-done{
+  border-color: rgba(34,197,94,.45);
+  background: rgba(34,197,94,.12);
+}
+
+.neu-priority{
+  color: rgba(234,231,242,.86);
+  font-weight: 600;
+}
+
+.neu-progress{
+  font-weight: 800;
+}
+
+.neu-empty{
+  padding: 14px 10px;
+  color: rgba(234,231,242,.65);
+}
+
+/* Buttons tweaks */
+.neu-btn{
+  border-radius: 14px;
+  font-weight: 700;
+}

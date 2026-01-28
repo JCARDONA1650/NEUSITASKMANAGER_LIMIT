@@ -1,0 +1,782 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --calendar-bg: #ffffff;
+        --calendar-border: #e5e7eb;
+        --header-text: #1a1a1a;
+        --day-text: #6b7280;
+        --today-bg: #fef3c7;
+        --today-border: #f59e0b;
+        --event-dot: #3b82f6;
+        --hover-bg: #f9fafb;
+        --outside-month: #d1d5db;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #f8f9fa;
+        color: var(--header-text);
+        line-height: 1.6;
+    }
+
+    .calendar-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .calendar-header {
+        background: var(--calendar-bg);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .calendar-title {
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: -0.5px;
+        margin-bottom: 1.5rem;
+        color: var(--header-text);
+    }
+
+    .calendar-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .month-navigation {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .month-label {
+        font-size: 1.5rem;
+        font-weight: 400;
+        min-width: 200px;
+        text-align: center;
+    }
+
+    .nav-btn {
+        background: var(--calendar-bg);
+        border: 1px solid var(--calendar-border);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        color: var(--day-text);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .nav-btn:hover {
+        background: var(--hover-bg);
+        border-color: var(--header-text);
+        transform: translateY(-1px);
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--calendar-border);
+        border-radius: 8px;
+        background: var(--calendar-bg);
+        color: var(--header-text);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-select:hover {
+        border-color: var(--header-text);
+    }
+
+    .btn-primary {
+        background: var(--header-text);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        background: #374151;
+        transform: translateY(-1px);
+    }
+
+    .btn-view-toggle {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.5rem 1.5rem;
+        border: 2px solid #0369a1;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .btn-view-toggle:hover {
+        background: #0369a1;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .calendar-grid {
+        background: var(--calendar-bg);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .weekday-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--calendar-border);
+    }
+
+    .weekday {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--day-text);
+    }
+
+    .calendar-weeks {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .calendar-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+
+    .calendar-day {
+        aspect-ratio: 1;
+        border: 1px solid var(--calendar-border);
+        border-radius: 8px;
+        padding: 0.5rem;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--calendar-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 80px;
+    }
+
+    .calendar-day:hover {
+        background: var(--hover-bg);
+        border-color: var(--header-text);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .calendar-day.outside-month {
+        background: #fafafa;
+        color: var(--outside-month);
+    }
+
+    .calendar-day.today {
+        background: var(--today-bg);
+        border: 2px solid var(--today-border);
+        font-weight: 600;
+    }
+
+    .day-number {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: var(--header-text);
+    }
+
+    .calendar-day.outside-month .day-number {
+        color: var(--outside-month);
+    }
+
+    .event-indicator {
+        display: flex;
+        gap: 2px;
+        margin-top: auto;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .event-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--event-dot);
+        border-radius: 50%;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .events-sidebar {
+        margin-top: 2rem;
+        background: var(--calendar-bg);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .events-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--header-text);
+    }
+
+    /* Estilos para event-card ya están definidos arriba */
+
+    .event-meta {
+        margin-top: 0.75rem;
+        font-size: 0.95rem;
+        color: #374151;
+        line-height: 1.5;
+    }
+
+    .event-link-display {
+        margin-top: 0.75rem;
+    }
+
+    .event-link-display a {
+        color: #2563eb;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .event-link-display a:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .event-card {
+        padding: 1rem;
+        border: 1px solid var(--calendar-border);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+    }
+
+    .event-card:hover {
+        border-color: var(--header-text);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .event-card.own-event {
+        background: #f0f9ff;
+        border-color: #0369a1;
+    }
+
+    .event-user {
+        font-size: 0.75rem;
+        color: #374151;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .event-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: #1a1a1a;
+    }
+
+    .event-time {
+        font-size: 0.9rem;
+        color: #1a1a1a;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .event-description {
+        margin-top: 0.75rem;
+        font-size: 0.95rem;
+        color: #374151;
+        line-height: 1.5;
+    }
+
+    .event-link-container {
+        margin-top: 0.75rem;
+    }
+
+    .event-link {
+        color: #2563eb;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .event-link:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .event-actions {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-small {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-edit {
+        background: #3b82f6;
+        color: white;
+        border: none;
+    }
+
+    .btn-edit:hover {
+        background: #2563eb;
+    }
+
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+        border: none;
+    }
+
+    .btn-delete:hover {
+        background: #dc2626;
+    }
+
+    .messages {
+        max-width: 900px;
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    @media (max-width: 768px) {
+        .calendar-title {
+            font-size: 1.5rem;
+        }
+
+        .month-label {
+            font-size: 1.25rem;
+            min-width: 150px;
+        }
+
+        .calendar-day {
+            min-height: 60px;
+            padding: 0.25rem;
+        }
+
+        .day-number {
+            font-size: 0.9rem;
+        }
+
+        .event-dot {
+            width: 4px;
+            height: 4px;
+        }
+    }
+
+    /* Modal para detalles del día */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        animation: fadeInModal 0.2s ease-in;
+    }
+
+    @keyframes fadeInModal {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: var(--calendar-bg);
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: 16px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--calendar-border);
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        text-transform: capitalize;
+    }
+
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--day-text);
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .close-modal:hover {
+        background: var(--hover-bg);
+        color: var(--header-text);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Mensajes -->
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="calendar-container">
+    <!-- Header del calendario -->
+    <div class="calendar-header">
+        <h1 class="calendar-title">
+            Calendario de Disponibilidad
+            {% if group_view and not is_admin %}
+            <span style="font-size: 1rem; color: #0369a1; font-weight: 500; margin-left: 1rem;">
+                👥 Vista Grupal
+            </span>
+            {% endif %}
+        </h1>
+        
+        <div class="calendar-controls">
+            <!-- Navegación de mes -->
+            <div class="month-navigation">
+                <a href="?{{ prev_qs }}" class="nav-btn">← Anterior</a>
+                <div class="month-label">{{ month_label }}</div>
+                <a href="?{{ next_qs }}" class="nav-btn">Siguiente →</a>
+            </div>
+
+            <!-- Filtros y acciones -->
+            <div class="filter-section">
+                {% if is_admin %}
+                <form method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" name="y" value="{{ year }}">
+                    <input type="hidden" name="m" value="{{ month }}">
+                    <select name="user" class="filter-select" onchange="this.form.submit()">
+                        <option value="">Todos los usuarios</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if u.id|stringformat:"s" == user_filter %}selected{% endif %}>
+                            {{ u.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% else %}
+                <!-- Botón de vista grupal para usuarios no-admin -->
+                {% if group_view %}
+                <a href="?y={{ year }}&m={{ month }}" class="btn-view-toggle">
+                    👤 Mi Calendario
+                </a>
+                {% else %}
+                <a href="?y={{ year }}&m={{ month }}&group_view=true" class="btn-view-toggle">
+                    👥 Calendario Grupal
+                </a>
+                {% endif %}
+                {% endif %}
+                <a href="{% url 'availability_create' %}" class="btn-primary">+ Nuevo Evento</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid del calendario -->
+    <div class="calendar-grid">
+        <!-- Headers de días de la semana -->
+        <div class="weekday-header">
+            {% for day in weekdays %}
+            <div class="weekday">{{ day }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- Semanas del calendario -->
+        <div class="calendar-weeks">
+            {% for week in weeks %}
+            <div class="calendar-week">
+                {% for cell in week %}
+                <div class="calendar-day {% if not cell.in_month %}outside-month{% endif %} {% if cell.is_today %}today{% endif %}"
+                     data-date="{{ cell.day.isoformat }}"
+                     onclick="showDayDetails('{{ cell.day.isoformat }}')">
+                    <div class="day-number">{{ cell.day.day }}</div>
+                    {% if cell.events_count > 0 %}
+                    <div class="event-indicator">
+                        {% for i in "x"|rjust:cell.events_count %}
+                        <div class="event-dot"></div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Lista de eventos del mes -->
+    {% if events %}
+    <div class="events-sidebar">
+        <h2 class="events-title">
+            Eventos de {{ month_name }}
+            {% if group_view and not is_admin %}
+            <span style="font-size: 0.85rem; color: #6b7280; font-weight: 400;">
+                (Vista grupal - solo puedes editar tus eventos)
+            </span>
+            {% endif %}
+        </h2>
+        {% for event in events %}
+        <div class="event-card {% if event.user_id == user.id and group_view %}own-event{% endif %}">
+            <div class="event-user">
+                {{ event.user.username }}
+                {% if event.user_id == user.id and group_view %}
+                <span style="color: #0369a1; font-weight: 600;">(Tú)</span>
+                {% endif %}
+            </div>
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-time">
+                {{ event.start_datetime|date:"d/m/Y H:i" }} - {{ event.end_datetime|date:"d/m/Y H:i" }}
+            </div>
+            {% if event.description %}
+            <div class="event-description">
+                {{ event.description }}
+            </div>
+            {% endif %}
+            {% if event.link %}
+            <div class="event-link-display">
+                <a href="{{ event.link }}" target="_blank">Ver enlace →</a>
+            </div>
+            {% endif %}
+            {% if is_admin or event.user_id == user.id %}
+            <div class="event-actions">
+                <a href="{% url 'availability_update' event.id %}" class="btn-small btn-edit">Editar</a>
+                <a href="{% url 'availability_delete' event.id %}" class="btn-small btn-delete">Eliminar</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal para detalles del día -->
+<div id="dayModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalDate"></h2>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modalEvents"></div>
+    </div>
+</div>
+
+<!-- Datos de eventos en formato JSON para JavaScript -->
+<script id="day-details-data" type="application/json">{{ day_details_json|safe }}</script>
+
+<!-- Variables de configuración -->
+<div id="calendar-config" 
+     data-user-id="{{ user.id }}"
+     data-is-admin="{% if is_admin %}true{% else %}false{% endif %}"
+     data-group-view="{% if group_view %}true{% else %}false{% endif %}"
+     style="display: none;">
+</div>
+
+<script>
+// Cargar configuración desde atributos HTML
+const configElement = document.getElementById('calendar-config');
+const currentUserId = parseInt(configElement.getAttribute('data-user-id'));
+const isAdmin = configElement.getAttribute('data-is-admin') === 'true';
+const groupView = configElement.getAttribute('data-group-view') === 'true';
+
+// Cargar datos de eventos
+let dayDetails = {};
+try {
+    const dataElement = document.getElementById('day-details-data');
+    if (dataElement && dataElement.textContent) {
+        dayDetails = JSON.parse(dataElement.textContent);
+        console.log('Datos cargados:', dayDetails); // Para debug
+    }
+} catch (e) {
+    console.error('Error al cargar datos:', e);
+}
+
+function showDayDetails(dateStr) {
+    console.log('Click en fecha:', dateStr); // Debug
+    const events = dayDetails[dateStr];
+    
+    if (!events || events.length === 0) {
+        console.log('No hay eventos para esta fecha');
+        return;
+    }
+
+    const modal = document.getElementById('dayModal');
+    const modalDate = document.getElementById('modalDate');
+    const modalEvents = document.getElementById('modalEvents');
+
+    if (!modal || !modalDate || !modalEvents) {
+        console.error('No se encontraron elementos del modal');
+        return;
+    }
+
+    // Formatear fecha
+    const date = new Date(dateStr + 'T00:00:00');
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    modalDate.textContent = date.toLocaleDateString('es-ES', options);
+
+    // Renderizar eventos
+    let html = '';
+    events.forEach(event => {
+        // Verificar si el usuario puede editar este evento
+        const canEdit = isAdmin || (event.user_id === currentUserId);
+        const isOwnEvent = event.user_id === currentUserId;
+        
+        // URLs correctas para editar y eliminar
+        const editUrl = `/availability/${event.id}/edit/`;
+        const deleteUrl = `/availability/${event.id}/delete/`;
+        
+        html += `
+            <div class="event-card ${groupView && isOwnEvent ? 'own-event' : ''}">
+                <div class="event-user">${event.user}${isOwnEvent && groupView ? ' (Tú)' : ''}</div>
+                <div class="event-title">${event.title}</div>
+                <div class="event-time">${event.start} - ${event.end}</div>
+                ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                ${event.link ? `<div class="event-link-container"><a href="${event.link}" target="_blank" class="event-link">Ver enlace →</a></div>` : ''}
+                ${canEdit ? `
+                <div class="event-actions">
+                    <a href="${editUrl}" class="btn-small btn-edit">Editar</a>
+                    <a href="${deleteUrl}" class="btn-small btn-delete">Eliminar</a>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    modalEvents.innerHTML = html;
+
+    modal.style.display = 'block';
+    console.log('Modal abierto'); // Debug
+}
+
+function closeModal() {
+    const modal = document.getElementById('dayModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('Modal cerrado'); // Debug
+    }
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('dayModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Matriz de Progreso{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/matrix_status.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/kanban.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-matrix">
+
+  <div class="neu-page-head mb-3">
+    <h2 class="neu-title">Matriz de Progreso</h2>
+    <p class="neu-subtitle">Vista tipo Kanban por estado de la tarea.</p>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- ================= NUEVAS ================= -->
+    <div class="col-lg-4">
+      <div class="neu-kanban-col" data-status="new">
+        <div class="neu-kanban-head">
+          <span>Nuevas</span>
+          <span class="neu-badge">{{ matrix.new|length }}</span>
+        </div>
+
+        {% for task in matrix.new %}
+          <div class="neu-task-card"
+               draggable="true"
+               data-task-id="{{ task.id }}"
+               data-status="new">
+
+            <div class="neu-task-title">{{ task.title }}</div>
+
+            <div class="neu-task-meta">
+              <span class="neu-pill">{{ task.get_priority_display }}</span>
+              <span class="neu-pill neu-pill-muted">{{ task.progress_percent|floatformat:0 }}%</span>
+            </div>
+
+            <div class="neu-task-resp">
+              {% for u in task.responsibles.all %}
+                <span class="neu-chip">{{ u.get_full_name|default:u.username }}</span>
+              {% empty %}
+                <span class="neu-muted">Sin responsable</span>
+              {% endfor %}
+            </div>
+
+            <a href="{% url 'task_detail' task.pk %}" class="neu-task-link">Abrir →</a>
+          </div>
+        {% empty %}
+          <p class="neu-muted">Sin tareas</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ================= EN PROGRESO ================= -->
+    <div class="col-lg-4">
+      <div class="neu-kanban-col" data-status="in_progress">
+        <div class="neu-kanban-head neu-head-progress">
+          <span>En progreso</span>
+          <span class="neu-badge">{{ matrix.in_progress|length }}</span>
+        </div>
+
+        {% for task in matrix.in_progress %}
+          <div class="neu-task-card"
+               draggable="true"
+               data-task-id="{{ task.id }}"
+               data-status="in_progress">
+
+            <div class="neu-task-title">{{ task.title }}</div>
+
+            <div class="neu-task-meta">
+              <span class="neu-pill neu-pill-progress">En progreso</span>
+              <span class="neu-pill neu-pill-muted">{{ task.progress_percent|floatformat:0 }}%</span>
+            </div>
+
+            <div class="neu-task-resp">
+              {% for u in task.responsibles.all %}
+                <span class="neu-chip">{{ u.get_full_name|default:u.username }}</span>
+              {% empty %}
+                <span class="neu-muted">Sin responsable</span>
+              {% endfor %}
+            </div>
+
+            <a href="{% url 'task_detail' task.pk %}" class="neu-task-link">Abrir →</a>
+          </div>
+        {% empty %}
+          <p class="neu-muted">Sin tareas</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ================= COMPLETADAS ================= -->
+    <div class="col-lg-4">
+      <div class="neu-kanban-col" data-status="completed">
+        <div class="neu-kanban-head neu-head-done">
+          <span>Completadas</span>
+          <span class="neu-badge">{{ matrix.completed|length }}</span>
+        </div>
+
+        {% for task in matrix.completed %}
+          <div class="neu-task-card neu-task-done"
+               draggable="true"
+               data-task-id="{{ task.id }}"
+               data-status="completed">
+
+            <div class="neu-task-title">{{ task.title }}</div>
+
+            <div class="neu-task-meta">
+              <span class="neu-pill neu-pill-done">Completada</span>
+              <span class="neu-pill neu-pill-muted">100%</span>
+            </div>
+
+            <div class="neu-task-resp">
+              {% for u in task.responsibles.all %}
+                <span class="neu-chip">{{ u.get_full_name|default:u.username }}</span>
+              {% empty %}
+                <span class="neu-muted">Sin responsable</span>
+              {% endfor %}
+            </div>
+
+            <a href="{% url 'task_detail' task.pk %}" class="neu-task-link">Abrir →</a>
+          </div>
+        {% empty %}
+          <p class="neu-muted">Sin tareas</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

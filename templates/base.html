@@ -1,0 +1,183 @@
+{% load static %}
+{% load role_tags %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeusiTaskManager – {% block title %}Panel{% endblock %}</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Google Font (moderna y limpia) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'core/css/navbar.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="neu-body">
+  <!-- Canvas de fondo neural (se crea dinámicamente con JS) -->
+  
+  <!-- Top Bar -->
+  <nav class="navbar navbar-expand-lg neu-navbar">
+    <div class="container-fluid neu-nav-container">
+
+      <a class="navbar-brand d-flex align-items-center gap-2 neu-brand" href="{% url 'home' %}">
+        <!-- Logo -->
+        <img src="{% static 'core/img/logo.png' %}" alt="Logo" class="neu-logo">
+  
+        <span class="neu-brand-text">NeusiTaskManager</span>
+      </a>
+
+      <button class="navbar-toggler neu-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <!-- Left Menu -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+          {% if user.is_authenticated %}
+
+            <!-- Backlog / Matrices / Dashboard (para todos) -->
+            <li class="nav-item">
+              <a class="nav-link neu-link" href="{% url 'task_list' %}">Backlog</a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle neu-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Matrices
+              </a>
+              <ul class="dropdown-menu neu-dropdown">
+                <li><a class="dropdown-item neu-dd-item" href="{% url 'matrix_priority' %}">Matriz Eisenhower</a></li>
+                <li><a class="dropdown-item neu-dd-item" href="{% url 'matrix_status' %}">Matriz de Estado (Kanban)</a></li>
+                <li><hr class="dropdown-divider neu-dd-divider"></li>
+                <li><a class="dropdown-item neu-dd-item" href="{% url 'export_matrix_pdf' %}">Exportar Matriz (PDF)</a></li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link neu-link" href="{% url 'dashboard' %}">Dashboard</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link neu-link" href="{% url 'daily_list' %}">Daily</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link neu-link" href="{% url 'availability_list' %}">Disponibilidad</a>
+            </li>
+
+            <!-- ADMIN MENU -->
+            {% if user|has_group:'admin' or user|has_group:'leader' or user|has_group:'scrum' or user.is_superuser %}
+
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle neu-link neu-link-strong" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Gestión
+                </a>
+                <ul class="dropdown-menu neu-dropdown">
+
+                  <!-- Tareas -->
+                  <li class="dropdown-header neu-dd-header">Tarea Principal</li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'task_list' %}">Lista de tareas</a></li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'task_create' %}">Nueva tarea</a></li>
+
+                  <li><hr class="dropdown-divider neu-dd-divider"></li>
+
+                  <!-- Proyectos -->
+                  <li class="dropdown-header neu-dd-header">Proyectos</li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'project_list' %}">Lista de proyectos</a></li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'project_create' %}">Nuevo proyecto</a></li>
+
+                  <li><hr class="dropdown-divider neu-dd-divider"></li>
+
+                  <!-- Sprints -->
+                  <li class="dropdown-header neu-dd-header">Sprints</li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'sprint_list' %}">Lista de sprints</a></li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'sprint_create' %}">Nuevo sprint</a></li>
+
+                  <li><hr class="dropdown-divider neu-dd-divider"></li>
+
+                  <!-- Épicas -->
+                  <li class="dropdown-header neu-dd-header">Épicas</li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'epic_list' %}">Lista de épicas</a></li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'epic_create' %}">Nueva épica</a></li>
+
+                  <li><hr class="dropdown-divider neu-dd-divider"></li>
+
+                  <li class="dropdown-header neu-dd-header">Usuarios</li>
+                  <li>
+                    <a class="dropdown-item neu-dd-item" href="{% url 'register' %}">
+                      ➕ Crear usuario
+                    </a>
+                  </li>
+                    <li><hr class="dropdown-divider neu-dd-divider"></li>
+                  <li class="dropdown-header neu-dd-header">Usuarios</li>
+                  <li><a class="dropdown-item neu-dd-item" href="{% url 'user_list' %}">Administrar usuarios</a></li>
+
+
+                </ul>
+              </li>
+
+            {% endif %}
+
+          {% endif %}
+        </ul>
+
+        <!-- Right Menu -->
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          {% if user.is_authenticated %}
+            <li class="nav-item d-flex align-items-center">
+              <span class="neu-user-pill me-2">
+                {{ user.username }}
+                {% if user|has_group:'admin' or user|has_group:'leader' or user|has_group:'scrum' or user.is_superuser %}
+                  <span class="neu-user-badge">ADMIN</span>
+                {% endif %}
+              </span>
+            </li>
+            <li class="nav-item">
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="nav-link neu-link neu-logout-btn">Salir</button>
+              </form>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link neu-link" href="{% url 'login' %}">Ingresar</a>
+            </li>
+          {% endif %}
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container neu-container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show neu-alert" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Neural Network Background -->
+  <script src="{% static 'core/js/neural-background.js' %}"></script>
+  
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

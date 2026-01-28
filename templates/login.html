@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+
+{% block title %}Ingresar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <!-- Brand / Header -->
+    <div class="login-header">
+      <div class="login-logo">
+        <span class="login-dot"></span>
+      </div>
+      <h1 class="login-title">NeusiTaskManager</h1>
+      <p class="login-subtitle">
+        Donde la inteligencia se encuentra con el propósito.
+      </p>
+    </div>
+
+    <!-- Messages (para auth_views.py) -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-danger{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" class="login-form">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="id_username" class="form-label">Usuario</label>
+        <input
+          type="text"
+          name="username"
+          id="id_username"
+          class="form-control"
+          autocomplete="username"
+          required
+        >
+      </div>
+
+      <div class="mb-4">
+        <label for="id_password" class="form-label">Contraseña</label>
+        <input
+          type="password"
+          name="password"
+          id="id_password"
+          class="form-control"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 login-btn">
+        Ingresar
+      </button>
+
+      <!-- Link admin-only (solo si ya está autenticado y es admin) -->
+{% if user.is_authenticated and user.is_superuser %}
+  <div class="login-links">
+    <a class="login-link" href="{% url 'register' %}">➕ Crear usuario (Admin)</a>
+  </div>
+
+{% elif user.is_authenticated and user|has_group:'admin' %}
+  <div class="login-links">
+    <a class="login-link" href="{% url 'register' %}">➕ Crear usuario (Admin)</a>
+  </div>
+
+{% elif user.is_authenticated and user|has_group:'leader' %}
+  <div class="login-links">
+    <a class="login-link" href="{% url 'register' %}">➕ Crear usuario (Admin)</a>
+  </div>
+
+{% elif user.is_authenticated and user|has_group:'scrum' %}
+  <div class="login-links">
+    <a class="login-link" href="{% url 'register' %}">➕ Crear usuario (Admin)</a>
+  </div>
+{% endif %}
+
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <small>© {{ now|date:"Y" }} Neural Wasi Solutions</small>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

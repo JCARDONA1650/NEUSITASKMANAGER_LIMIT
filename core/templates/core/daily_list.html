@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+
+{% block title %}Dailies{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/daily_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-daily">
+
+  <div class="neu-page-head">
+    <div>
+      <h2 class="neu-title">Registro de Dailies</h2>
+      <p class="neu-subtitle">Seguimiento diario por usuario. Los admins pueden filtrar y eliminar registros.</p>
+    </div>
+
+    <div class="neu-head-actions">
+      <a href="{% url 'daily_create' %}" class="btn btn-primary neu-btn">Registrar Daily</a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="card neu-card p-3 mb-3">
+    <div class="row g-3 align-items-end">
+
+      {% if is_admin %}
+      <div class="col-lg-4 col-md-6">
+        <label for="user" class="form-label">Usuario</label>
+        <select name="user" id="user" class="form-select" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          {% for u in users %}
+            <option value="{{ u.id }}" {% if selected_user|stringformat:"s" == u.id|stringformat:"s" %}selected{% endif %}>
+              {{ u.get_full_name|default:u.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="col-lg-3 col-md-6">
+        <label for="from" class="form-label">Desde</label>
+        <input type="date" class="form-control" id="from" name="from" value="{{ from|default:'' }}">
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="to" class="form-label">Hasta</label>
+        <input type="date" class="form-control" id="to" name="to" value="{{ to|default:'' }}">
+      </div>
+
+      <div class="col-lg-2 col-md-6 d-flex gap-2 justify-content-md-end">
+        <button type="submit" class="btn btn-primary neu-btn">Aplicar</button>
+        <a href="{% url 'daily_list' %}" class="btn btn-outline-secondary neu-btn">Limpiar</a>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- Tabla -->
+  <div class="card neu-card p-3">
+    <div class="neu-card-title d-flex justify-content-between align-items-center">
+      <span>Dailies</span>
+      <span class="neu-pill">Total: {{ dailies|length }}</span>
+    </div>
+
+    {% if is_admin %}
+    <!-- Acciones admin -->
+    <div class="neu-admin-actions mb-3">
+
+      <!-- Eliminar seleccionados -->
+      <form method="post" action="{% url 'daily_bulk_delete' %}" class="neu-inline-form" id="deleteSelectedForm">
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="selected">
+
+        <button type="submit" class="btn btn-outline-danger neu-btn-sm"
+                onclick="return confirm('¿Eliminar los dailies seleccionados?');">
+          Eliminar seleccionados
+        </button>
+      </form>
+
+      <!-- Eliminar por rango -->
+      <form method="post" action="{% url 'daily_bulk_delete' %}" class="neu-inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="range">
+
+        <input type="date" name="date_from" class="form-control form-control-sm neu-date" required>
+        <input type="date" name="date_to" class="form-control form-control-sm neu-date" required>
+
+        <!-- respeta filtro de usuario si está seleccionado -->
+        <input type="hidden" name="user_id" value="{{ selected_user|default:'' }}">
+
+        <button type="submit" class="btn btn-outline-danger neu-btn-sm"
+                onclick="return confirm('¿Eliminar dailies en este rango?');">
+          Eliminar por rango
+        </button>
+      </form>
+
+      <div class="neu-muted small">
+        Tip: el rango respetará el filtro de usuario si está seleccionado.
+      </div>
+
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+      <table class="table neu-table align-middle">
+        <thead>
+          <tr>
+            {% if is_admin %}
+              <th class="neu-check">
+                <input type="checkbox" class="form-check-input" id="checkAll">
+              </th>
+            {% endif %}
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>¿A tiempo?</th>
+            <th>Lo que hice ayer</th>
+            <th>Lo que haré hoy</th>
+            <th>Impedimentos</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for daily in dailies %}
+          <tr>
+            {% if is_admin %}
+              <td class="neu-check">
+                <input type="checkbox"
+                       class="form-check-input daily-check"
+                       name="daily_ids"
+                       form="deleteSelectedForm"
+                       value="{{ daily.id }}">
+              </td>
+            {% endif %}
+
+            <td class="neu-td-strong">{{ daily.user.get_full_name|default:daily.user.username }}</td>
+            <td class="neu-muted">{{ daily.date|date:"j \\d\\e F \\d\\e Y" }}</td>
+
+            <td>
+              {% if daily.within_time_range %}
+                <span class="neu-pill neu-pill-done">A tiempo</span>
+              {% else %}
+                <span class="neu-pill neu-pill-warn">Fuera de hora</span>
+              {% endif %}
+            </td>
+
+            <td class="neu-muted">{{ daily.yesterday|default:"—"|linebreaksbr }}</td>
+            <td class="neu-muted">{{ daily.today|default:"—"|linebreaksbr }}</td>
+            <td class="neu-muted">{{ daily.impediment|default:"Sin impedimentos"|linebreaksbr }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="{% if is_admin %}7{% else %}6{% endif %}" class="text-center neu-muted py-4">
+              No se han registrado dailies.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Check all (admin)
+  const checkAll = document.getElementById("checkAll");
+  if (checkAll) {
+    checkAll.addEventListener("change", (e) => {
+      document.querySelectorAll(".daily-check").forEach(cb => cb.checked = e.target.checked);
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+
+{% block title %}Matriz de Prioridad{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/matrix_priority.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-matrix">
+
+  <div class="neu-page-head">
+    <div>
+      <h2 class="neu-title">Matriz de Prioridad (Eisenhower)</h2>
+      <p class="neu-subtitle">Organiza tareas por urgencia e importancia. Click en una tarjeta para abrir el detalle.</p>
+    </div>
+
+    <div class="neu-head-actions">
+      <a class="btn btn-outline-secondary neu-btn"
+         href="{% url 'export_matrix_pdf' %}?project={{ selected_project }}&sprint={{ selected_sprint }}&responsible={{ selected_responsible }}">
+        Exportar PDF
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="card neu-card p-3 mb-3">
+    <div class="row g-3 align-items-end">
+
+      <div class="col-lg-3 col-md-6">
+        <label for="project" class="form-label">Proyecto</label>
+        <select name="project" id="project" class="form-select">
+          <option value="">Todos</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}" {% if p.id|stringformat:"s" == selected_project %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="sprint" class="form-label">Sprint</label>
+        <select name="sprint" id="sprint" class="form-select">
+          <option value="">Todos</option>
+          {% for s in sprints %}
+            <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_sprint %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="responsible" class="form-label">Responsable</label>
+        <select name="responsible" id="responsible" class="form-select">
+          <option value="">Todos</option>
+          {% for r in responsibles %}
+            <option value="{{ r.id }}" {% if r.id|stringformat:"s" == selected_responsible %}selected{% endif %}>{{ r.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex gap-2 justify-content-md-end">
+        <button type="submit" class="btn btn-primary neu-btn">Aplicar</button>
+        <a href="{% url 'matrix_priority' %}" class="btn btn-outline-secondary neu-btn">Limpiar</a>
+      </div>
+
+    </div>
+  </form>
+
+
+  <div class="neu-grid">
+
+    <!-- DO (Urgente + Importante) -->
+    <section class="neu-quadrant neu-q-do">
+      <div class="neu-q-head">
+        <div>
+          <div class="neu-q-title">Urgente + Importante</div>
+          
+        </div>
+        <span class="neu-pill neu-pill-strong">
+          {% if matrix.do is not None %}{{ matrix.do|length }}{% elif matrix.urgent is not None %}{{ matrix.urgent|length }}{% else %}0{% endif %}
+        </span>
+      </div>
+
+      <div class="neu-q-body">
+        {% if matrix.do is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.do empty_text="Sin tareas en Hacer." only %}
+        {% elif matrix.urgent is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.urgent empty_text="Sin tareas en Hacer." only %}
+        {% else %}
+          <div class="neu-empty">Sin tareas en Hacer.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- PLAN (Importante + No urgente) -->
+    <section class="neu-quadrant neu-q-plan">
+      <div class="neu-q-head">
+        <div>
+          <div class="neu-q-title">Importante + No urgente</div>
+         
+        </div>
+        <span class="neu-pill neu-pill-strong">
+          {% if matrix.plan is not None %}{{ matrix.plan|length }}{% elif matrix.important is not None %}{{ matrix.important|length }}{% else %}0{% endif %}
+        </span>
+      </div>
+
+      <div class="neu-q-body">
+        {% if matrix.plan is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.plan empty_text="Sin tareas en Planificar." only %}
+        {% elif matrix.important is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.important empty_text="Sin tareas en Planificar." only %}
+        {% else %}
+          <div class="neu-empty">Sin tareas en Planificar.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- DELEGATE (Urgente + No importante) -->
+    <section class="neu-quadrant neu-q-delegate">
+      <div class="neu-q-head">
+        <div>
+          <div class="neu-q-title">Urgente + No importante</div>
+          
+        </div>
+        <span class="neu-pill neu-pill-strong">
+          {% if matrix.delegate is not None %}{{ matrix.delegate|length }}{% elif matrix.not_urgent is not None %}{{ matrix.not_urgent|length }}{% else %}0{% endif %}
+        </span>
+      </div>
+
+      <div class="neu-q-body">
+        {% if matrix.delegate is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.delegate empty_text="Sin tareas en Delegar." only %}
+        {% elif matrix.not_urgent is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.not_urgent empty_text="Sin tareas en Delegar." only %}
+        {% else %}
+          <div class="neu-empty">Sin tareas en Delegar.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ELIMINATE (Ni urgente ni importante) -->
+    <section class="neu-quadrant neu-q-eliminate">
+      <div class="neu-q-head">
+        <div>
+          <div class="neu-q-title">Ni urgente ni importante</div>
+        
+        </div>
+        <span class="neu-pill neu-pill-strong">
+          {% if matrix.eliminate is not None %}{{ matrix.eliminate|length }}{% elif matrix.other is not None %}{{ matrix.other|length }}{% else %}0{% endif %}
+        </span>
+      </div>
+
+      <div class="neu-q-body">
+        {% if matrix.eliminate is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.eliminate empty_text="Sin tareas en Eliminar." only %}
+        {% elif matrix.other is not None %}
+          {% include "core/partials/matrix_cards.html" with tasks=matrix.other empty_text="Sin tareas en Eliminar." only %}
+        {% else %}
+          <div class="neu-empty">Sin tareas en Eliminar.</div>
+        {% endif %}
+      </div>
+    </section>
+
+  </div>
+</div>
+{% endblock %}

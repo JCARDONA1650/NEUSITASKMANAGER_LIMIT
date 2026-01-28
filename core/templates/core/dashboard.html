@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+{% load money %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-dashboard">
+
+  <div class="neu-page-head">
+    <div>
+      <h2 class="neu-title">Dashboard</h2>
+      <p class="neu-subtitle">Resumen de avance, dailies y presupuesto. Estilo tipo Azure DevOps.</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="card neu-card p-3 mb-3">
+    <div class="row g-3 align-items-end">
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="project">Proyecto</label>
+        <select class="form-select" id="project" name="project">
+          <option value="">Todos</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}" {% if selected_project|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+              {{ p.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="sprint">Sprint</label>
+        <select class="form-select" id="sprint" name="sprint">
+          <option value="">Todos</option>
+          {% for s in sprints %}
+            <option value="{{ s.id }}" {% if selected_sprint|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="responsible">Responsable</label>
+        <select class="form-select" id="responsible" name="responsible">
+          <option value="">Todos</option>
+          {% for r in responsibles %}
+            <option value="{{ r.id }}" {% if selected_responsible|stringformat:"s" == r.id|stringformat:"s" %}selected{% endif %}>
+              {{ r.get_full_name|default:r.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="from">Desde</label>
+        <input type="date" class="form-control" id="from" name="from" value="{{ date_from|date:'Y-m-d' }}">
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="to">Hasta</label>
+        <input type="date" class="form-control" id="to" name="to" value="{{ date_to|date:'Y-m-d' }}">
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex gap-2 justify-content-md-end">
+        <button type="submit" class="btn btn-primary neu-btn">Aplicar</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary neu-btn">Limpiar</a>
+      </div>
+
+      <div class="col-lg-12">
+        <div class="neu-muted small">
+          Días hábiles en rango: <strong>{{ business_days }}</strong>.
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-3">
+    <div class="col-lg-3 col-md-6">
+      <div class="neu-kpi">
+        <div class="neu-kpi-title">Tareas</div>
+        <div class="neu-kpi-value">{{ total_tasks }}</div>
+        <div class="neu-kpi-sub">
+          <span class="neu-pill">Nuevas: {{ new_tasks }}</span>
+          <span class="neu-pill neu-pill-progress">En progreso: {{ in_progress_tasks }}</span>
+          <span class="neu-pill neu-pill-done">Completadas: {{ completed_tasks }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="neu-kpi">
+        <div class="neu-kpi-title">Avance de tareas</div>
+        <div class="neu-kpi-value">{{ progress|floatformat:0 }}%</div>
+        <div class="neu-kpi-sub neu-muted">Basado en estado “Completada”.</div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="neu-kpi">
+        <div class="neu-kpi-title">Subtareas</div>
+        <div class="neu-kpi-value">{{ sub_progress|floatformat:0 }}%</div>
+        <div class="neu-kpi-sub">
+          <span class="neu-pill">Total: {{ total_subtasks }}</span>
+          <span class="neu-pill neu-pill-done">OK: {{ completed_subtasks }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="neu-kpi">
+        <div class="neu-kpi-title">Daily (cumplimiento horario)</div>
+        <div class="neu-kpi-value">{{ daily_efficiency|floatformat:0 }}%</div>
+        <div class="neu-kpi-sub neu-muted">En el rango seleccionado.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficas (3 originales) -->
+  <div class="row g-3 mb-3">
+    <div class="col-lg-4">
+      <div class="card neu-card p-3">
+        <div class="neu-card-title">Estado de tareas</div>
+        <div class="neu-chart-wrap">
+          <div class="chart-box">
+            <canvas id="chartTasksStatus"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card neu-card p-3">
+        <div class="neu-card-title">Presupuesto por proyecto</div>
+        <div class="neu-chart-wrap">
+          <div class="chart-box">
+            <canvas id="chartBudgetProjects"></canvas>
+          </div>
+        </div>
+        <div class="neu-muted small mt-2">
+          Total presupuesto vs gastado (según tareas filtradas).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-12">
+      <div class="card neu-card p-3">
+        <div class="neu-card-title">Dailies por integrante</div>
+        <div class="neu-chart-wrap">
+          <div class="chart-box">
+            <canvas id="chartDailyUsers"></canvas>
+          </div>
+        </div>
+        <div class="neu-muted small mt-2">
+          Cumplimiento en horario y participación (días con daily / días hábiles).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla métricas daily por integrante -->
+  <div class="card neu-card p-3 mb-3">
+    <div class="neu-card-title d-flex justify-content-between align-items-center">
+      <span>Métricas de Daily por Integrante</span>
+      <span class="neu-pill">Rango: {{ date_from|date:"M d, Y" }} → {{ date_to|date:"M d, Y" }}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table neu-table align-middle">
+        <thead>
+          <tr>
+            <th>Integrante</th>
+            <th>Cumplimiento en horario</th>
+            <th>Retrasos</th>
+            <th>No completado</th>
+            <th>Participación en daily</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in daily_stats %}
+          <tr>
+            <td class="neu-td-strong">{{ row.user.get_full_name|default:row.user.username }}</td>
+            <td><span class="neu-pill neu-pill-done">{{ row.compliance|floatformat:1 }}%</span></td>
+            <td><span class="neu-pill neu-pill-warn">{{ row.late|floatformat:1 }}%</span></td>
+            <td><span class="neu-pill neu-pill-muted">{{ row.not_completed|floatformat:1 }}%</span></td>
+            <td><span class="neu-pill">{{ row.participation|floatformat:1 }}%</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center neu-muted py-4">No hay usuarios para el rango.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="neu-muted small mt-2">
+      * Cumplimiento: dailies en 5–9am / días hábiles. · Participación: días con daily / días hábiles.
+    </div>
+  </div>
+
+  <!-- Tabla presupuesto -->
+  <div class="card neu-card p-3 mb-3">
+    <div class="neu-card-title d-flex justify-content-between align-items-center">
+      <span>Tablero de presupuesto</span>
+      <span class="neu-pill">Uso total: {{ budget_used_percent|floatformat:0 }}%</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table neu-table align-middle">
+        <thead>
+          <tr>
+            <th>Proyecto</th>
+            <th>Tareas</th>
+            <th>Total</th>
+            <th>Gastado</th>
+            <th>% Uso</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in budget_rows %}
+          <tr>
+            <td class="neu-td-strong">{{ b.project }}</td>
+            <td><span class="neu-badge">{{ b.tasks }}</span></td>
+            <td class="neu-td-strong">{{ b.total|cop }}</td>
+            <td class="neu-td-strong">{{ b.spent|cop }}</td>
+            <td>
+              <span class="neu-pill {% if b.pct >= 90 %}neu-pill-warn{% else %}neu-pill-muted{% endif %}">
+                {{ b.pct|floatformat:0 }}%
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center neu-muted py-4">Sin datos de presupuesto.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detalle HU (últimas 25) -->
+  <div class="card neu-card p-3 mb-3">
+    <div class="neu-card-title">Detalle de HU (últimas 25)</div>
+
+    <div class="table-responsive">
+      <table class="table neu-table align-middle">
+        <thead>
+          <tr>
+            <th>HU</th>
+            <th>Proyecto</th>
+            <th>Sprint</th>
+            <th>Estado</th>
+            <th>SP</th>
+            <th>Subtareas</th>
+            <th>% Progreso</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in task_rows %}
+          <tr>
+            <td class="neu-td-strong">
+              <a class="neu-link-inline" href="{% url 'task_detail' r.task.pk %}">{{ r.task.title }}</a>
+            </td>
+            <td class="neu-muted">{{ r.task.project.name }}</td>
+            <td class="neu-muted">{% if r.task.sprint %}{{ r.task.sprint.name }}{% else %}—{% endif %}</td>
+            <td><span class="neu-pill">{{ r.task.get_status_display }}</span></td>
+            <td><span class="neu-badge">{{ r.task.story_points }}</span></td>
+            <td class="neu-muted">{{ r.sub_done }} / {{ r.sub_total }}</td>
+            <td class="neu-muted">{{ r.task.progress_percent|floatformat:0 }}%</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center neu-muted py-4">No hay tareas para mostrar.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ✅ Avance en el tiempo (línea) -->
+  <div class="card neu-card p-3 mb-3">
+    <div class="neu-card-title d-flex justify-content-between align-items-center">
+      <span>Avance en el tiempo (rango seleccionado)</span>
+      <span class="neu-pill">Tareas completadas acumuladas</span>
+    </div>
+
+    <div class="neu-chart-wrap">
+      <div class="chart-box chart-box-lg">
+        <canvas id="chartWorkTrend"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Subtareas por responsable -->
+  <div class="card neu-card p-3 mb-3">
+    <div class="neu-card-title d-flex justify-content-between align-items-center">
+      <span>Subtareas por responsable</span>
+      <span class="neu-pill">Conteo por estado</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table neu-table align-middle">
+        <thead>
+          <tr>
+            <th>Responsable</th>
+            <th>Nuevas</th>
+            <th>En progreso</th>
+            <th>Completadas</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in responsible_subtask_rows %}
+          <tr>
+            <td class="neu-td-strong">{{ row.user.get_full_name|default:row.user.username }}</td>
+            <td><span class="neu-badge">{{ row.new }}</span></td>
+            <td><span class="neu-badge">{{ row.in_progress }}</span></td>
+            <td><span class="neu-badge">{{ row.completed }}</span></td>
+            <td class="neu-td-strong">{{ row.new|add:row.in_progress|add:row.completed }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center neu-muted py-4">No hay datos para el rango / filtros seleccionados.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js (UNA SOLA VEZ) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+{# JSON seguro para JS (Django) #}
+{{ chart_tasks_status|json_script:"chart_tasks_status_json" }}
+{{ chart_budget_projects|json_script:"chart_budget_projects_json" }}
+{{ chart_daily_users|json_script:"chart_daily_users_json" }}
+{{ chart_progress_trend|json_script:"chart_progress_trend_json" }}
+
+<script>
+  // ===== Tema oscuro global (si no, ticks/labels se ven muy oscuros)
+  Chart.defaults.color = "rgba(255,255,255,.92)";
+  Chart.defaults.borderColor = "rgba(255,255,255,.14)";
+  Chart.defaults.font.family = "system-ui, -apple-system, Segoe UI, Roboto, Arial";
+
+  // ---- Lee JSON seguro desde los <script type="application/json"> que genera Django
+  const chartTasksStatus    = JSON.parse(document.getElementById("chart_tasks_status_json").textContent);
+  const chartBudgetProjects = JSON.parse(document.getElementById("chart_budget_projects_json").textContent);
+  const chartDailyUsers     = JSON.parse(document.getElementById("chart_daily_users_json").textContent);
+  const chartProgressTrend  = JSON.parse(document.getElementById("chart_progress_trend_json").textContent);
+
+  // Si ya existían charts (por hot-reload), destrúyelos
+  const __charts = window.__charts || (window.__charts = {});
+  function mountChart(key, el, config){
+    if (!el) return;
+    if (__charts[key]) __charts[key].destroy();
+    __charts[key] = new Chart(el, config);
+  }
+
+  // 1) Doughnut: estado tareas
+  mountChart("chartTasksStatus", document.getElementById("chartTasksStatus"), {
+    type: "doughnut",
+    data: {
+      labels: chartTasksStatus.labels || [],
+      datasets: [{ data: chartTasksStatus.data || [] }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
+
+  // 2) Bar: presupuesto por proyecto
+  mountChart("chartBudgetProjects", document.getElementById("chartBudgetProjects"), {
+    type: "bar",
+    data: {
+      labels: chartBudgetProjects.labels || [],
+      datasets: [
+        { label: "Total", data: chartBudgetProjects.total || [] },
+        { label: "Gastado", data: chartBudgetProjects.spent || [] },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } },
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,.10)" } },
+        y: { beginAtZero: true, grid: { color: "rgba(255,255,255,.10)" } }
+      }
+    }
+  });
+
+  // 3) Bar: dailies por usuario
+  mountChart("chartDailyUsers", document.getElementById("chartDailyUsers"), {
+    type: "bar",
+    data: {
+      labels: chartDailyUsers.labels || [],
+      datasets: [
+        { label: "Cumplimiento horario %", data: chartDailyUsers.compliance || [] },
+        { label: "Participación %", data: chartDailyUsers.participation || [] },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } },
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,.10)" } },
+        y: { beginAtZero: true, max: 100, grid: { color: "rgba(255,255,255,.10)" } }
+      }
+    }
+  });
+
+  // 4) Line: avance en el tiempo (tareas completadas acumuladas)
+  // IMPORTANTE: el canvas es "chartWorkTrend" (no chartProgressTrend)
+  mountChart("chartWorkTrend", document.getElementById("chartWorkTrend"), {
+    type: "line",
+    data: {
+      labels: chartProgressTrend.labels || [],
+      datasets: [{
+        label: "Completadas acumuladas",
+        data: chartProgressTrend.data || [],
+        tension: 0.25,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "top" } },
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,.10)" } },
+        y: { beginAtZero: true, grid: { color: "rgba(255,255,255,.10)" } }
+      }
+    }
+  });
+</script>
+{% endblock %}

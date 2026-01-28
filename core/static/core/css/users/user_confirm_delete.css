@@ -1,0 +1,79 @@
+/* =====================================================
+   USER CONFIRM DELETE – NEUSI STYLE
+   ===================================================== */
+
+/* Card */
+.card{
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+  color: #ffffff !important;
+}
+
+/* Título */
+.card h3{
+  color: #ffffff !important;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+/* Texto informativo */
+.card > .mb-3 div{
+  color: rgba(234,231,242,.9) !important;
+}
+
+/* Alert peligro */
+.alert-danger{
+  background: rgba(239,68,68,.16) !important;
+  border: 1px solid rgba(239,68,68,.45) !important;
+  color: #ffffff !important;
+  border-radius: 14px;
+}
+
+.alert-danger .fw-semibold{
+  font-weight: 700;
+}
+
+/* Labels internos */
+.card span{
+  color: rgba(234,231,242,.8) !important;
+}
+
+/* Username destacado */
+.card .fw-semibold{
+  color: #ffffff !important;
+}
+
+/* Botón eliminar */
+.btn-danger{
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  border: 1px solid rgba(239,68,68,.65);
+  font-weight: 700;
+  color: #ffffff !important;
+}
+
+.btn-danger:hover{
+  filter: brightness(1.05);
+}
+
+/* Botón cancelar */
+.btn-outline-secondary{
+  color: rgba(234,231,242,.85) !important;
+  border-color: rgba(255,255,255,.25);
+}
+
+.btn-outline-secondary:hover{
+  background: rgba(255,255,255,.08);
+  color: #ffffff !important;
+}
+
+/* Protección global: nada oscuro */
+.card *,
+.card label,
+.card div,
+.card span,
+.card button,
+.card a{
+  color: #ffffff !important;
+}

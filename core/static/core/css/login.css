@@ -1,0 +1,120 @@
+/* --------------------------------------------------
+   LOGIN PAGE – NEUSI STYLE
+-------------------------------------------------- */
+
+.login-wrapper{
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.login-card{
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  padding: 2.5rem 2.2rem 2rem;
+  backdrop-filter: blur(12px);
+}
+
+/* Header */
+.login-header{
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.login-dot{
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #b66bff;
+  box-shadow:
+    0 0 0 6px rgba(182,107,255,.18),
+    0 0 22px rgba(182,107,255,.55);
+}
+
+.login-title{
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: .35rem;
+}
+
+.login-subtitle{
+  font-size: .9rem;
+  color: rgba(234,231,242,.72);
+  margin: 0;
+}
+
+/* Form */
+.login-form .form-label{
+  color: rgba(234,231,242,.8);
+  font-weight: 500;
+  margin-bottom: .35rem;
+}
+
+.login-form input{
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  padding: .55rem .7rem;
+  color: rgba(234,231,242,.95);
+}
+
+.login-form input:focus{
+  outline: none;
+  background: rgba(255,255,255,.08);
+  border-color: rgba(182,107,255,.55);
+  box-shadow: 0 0 0 .25rem rgba(182,107,255,.14);
+}
+
+/* Button */
+.login-btn{
+  margin-top: .5rem;
+  padding: .6rem;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+/* Footer */
+.login-footer{
+  text-align: center;
+  margin-top: 1.8rem;
+  color: rgba(234,231,242,.55);
+}
+
+/* Alerts */
+.login-card .alert{
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.35);
+  color: #fff;
+  border-radius: 14px;
+  padding: .6rem .75rem;
+}
+/* Admin link */
+.login-links{
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.login-link{
+  display: inline-block;
+  font-weight: 700;
+  text-decoration: none;
+  color: rgba(182,107,255,.98);
+}
+
+.login-link:hover{
+  text-decoration: underline;
+}

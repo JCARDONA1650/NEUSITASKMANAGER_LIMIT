@@ -1,0 +1,40 @@
+{% if tasks %}
+  {% for task in tasks %}
+    <div class="neu-matrix-card">
+
+      <div class="neu-matrix-title">
+        {{ task.title }}
+      </div>
+
+      <div class="neu-matrix-tags">
+        {% if task.sprint %}
+          <span class="neu-pill">Sprint: {{ task.sprint.name }}</span>
+        {% endif %}
+        {% if task.epic %}
+          <span class="neu-pill">Épica: {{ task.epic.name }}</span>
+        {% endif %}
+      </div>
+
+      <!-- RESPONSABLES -->
+      <div class="neu-matrix-resp">
+        {% for u in task.responsibles.all %}
+          <span class="neu-chip">
+            {{ u.get_full_name|default:u.username }}
+          </span>
+        {% empty %}
+          <span class="neu-muted">Sin responsable</span>
+        {% endfor %}
+      </div>
+
+      <div class="neu-matrix-footer">
+        <span class="neu-muted">{{ task.progress_percent|floatformat:0 }}%</span>
+        <a href="{% url 'task_detail' task.pk %}" class="neu-matrix-link">
+          Abrir →
+        </a>
+      </div>
+
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="neu-empty">{{ empty_text }}</div>
+{% endif %}

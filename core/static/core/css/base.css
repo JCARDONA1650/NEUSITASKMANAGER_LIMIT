@@ -1,0 +1,350 @@
+:root{
+  /* Base */
+  --neu-bg: #0b0714;
+  --neu-card: rgba(255,255,255,.06);
+  --neu-card-2: rgba(255,255,255,.08);
+  --neu-border: rgba(255,255,255,.12);
+
+  /* Brand (inspirado en banner morado) */
+  --neu-purple-1: #2a063a;   /* deep purple */
+  --neu-purple-2: #4a0b63;   /* mid purple */
+  --neu-purple-3: #7a1bb0;   /* highlight */
+  --neu-neon: #b66bff;       /* neon accent */
+
+  /* Text */
+  --neu-text: #eae7f2;
+  --neu-muted: rgba(234,231,242,.72);
+
+  /* States */
+  --neu-success: #22c55e;
+  --neu-warning: #f59e0b;
+  --neu-danger: #ef4444;
+
+  /* Radius & shadow */
+  --neu-radius: 16px;
+  --neu-shadow: 0 18px 42px rgba(0,0,0,.35);
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  height: 100%;
+}
+
+body.neu-body{
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 12% 0%, rgba(122,27,176,.35), transparent 55%),
+    radial-gradient(900px 500px at 85% 10%, rgba(182,107,255,.22), transparent 55%),
+    linear-gradient(180deg, #0a0612, var(--neu-bg));
+  color: var(--neu-text);
+}
+
+/* Navbar */
+.neu-navbar{
+  background:
+    linear-gradient(90deg, rgba(74,11,99,.92), rgba(20,10,35,.92));
+  border-bottom: 1px solid var(--neu-border);
+  backdrop-filter: blur(10px);
+}
+
+.neu-nav-container{
+  padding: .55rem .75rem;
+}
+
+.neu-brand{
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.neu-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--neu-neon);
+  box-shadow: 0 0 0 4px rgba(182,107,255,.18);
+  display: inline-block;
+}
+
+.neu-brand-text{
+  color: var(--neu-text);
+}
+
+.neu-link{
+  color: rgba(234,231,242,.88) !important;
+  font-weight: 500;
+}
+
+.neu-link:hover{
+  color: #ffffff !important;
+  text-shadow: 0 0 18px rgba(182,107,255,.18);
+}
+
+.neu-link-strong{
+  color: #ffffff !important;
+}
+
+.neu-toggler{
+  border: 1px solid var(--neu-border) !important;
+}
+
+/* Dropdown */
+.neu-dropdown{
+  background: rgba(20,10,35,.96);
+  border: 1px solid var(--neu-border);
+  border-radius: 14px;
+  box-shadow: var(--neu-shadow);
+  padding: .35rem;
+}
+
+.neu-dd-item{
+  color: rgba(234,231,242,.92);
+  border-radius: 10px;
+  padding: .55rem .65rem;
+}
+
+.neu-dd-item:hover{
+  background: rgba(182,107,255,.14);
+  color: #fff;
+}
+
+.neu-dd-header{
+  color: rgba(234,231,242,.65);
+  font-weight: 600;
+  padding: .4rem .65rem .2rem;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .8px;
+}
+
+.neu-dd-divider{
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+/* User pill */
+.neu-user-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(234,231,242,.95);
+  font-weight: 600;
+}
+
+.neu-user-badge{
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  background: rgba(182,107,255,.18);
+  border: 1px solid rgba(182,107,255,.28);
+  color: #fff;
+}
+
+/* Main container */
+.neu-container{
+  padding-bottom: 2rem;
+}
+
+/* Alerts */
+.neu-alert{
+  border-radius: var(--neu-radius);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: var(--neu-text);
+}
+
+/* Cards (cuando uses .card normal de Bootstrap) */
+.card{
+  background: var(--neu-card);
+  border: 1px solid var(--neu-border);
+  border-radius: var(--neu-radius);
+  box-shadow: var(--neu-shadow);
+}
+
+.card .card-header{
+  background: rgba(255,255,255,.06);
+  border-bottom: 1px solid var(--neu-border);
+}
+
+/* Tables */
+.table{
+  color: rgba(234,231,242,.92);
+}
+.table thead th{
+  color: rgba(234,231,242,.78);
+  border-bottom: 1px solid rgba(255,255,255,.14) !important;
+}
+.table td, .table th{
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+/* Buttons */
+.btn-primary{
+  background: linear-gradient(90deg, var(--neu-purple-2), var(--neu-purple-3));
+  border: 1px solid rgba(182,107,255,.35);
+}
+.btn-primary:hover{
+  filter: brightness(1.05);
+}
+
+.btn-outline-primary{
+  color: var(--neu-neon);
+  border-color: rgba(182,107,255,.45);
+}
+.btn-outline-primary:hover{
+  background: rgba(182,107,255,.16);
+  border-color: rgba(182,107,255,.55);
+}
+
+/* Forms */
+.form-control, .form-select{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(234,231,242,.92);
+  border-radius: 12px;
+}
+.form-control:focus, .form-select:focus{
+  border-color: rgba(182,107,255,.55);
+  box-shadow: 0 0 0 .25rem rgba(182,107,255,.12);
+  background: rgba(255,255,255,.08);
+  color: rgba(234,231,242,.95);
+}
+.form-label{
+  color: rgba(234,231,242,.78);
+}
+/* =========================
+   FIX: Dropdown clickeable (z-index / overflow)
+   ========================= */
+
+/* Navbar siempre arriba */
+.neu-navbar{
+  position: sticky;   /* si no quieres sticky, cambia a: position: relative; */
+  top: 0;
+  z-index: 5000;
+}
+
+/* Importante: que no recorte el dropdown */
+.neu-navbar,
+.neu-navbar .container-fluid,
+.neu-navbar .navbar-collapse{
+  overflow: visible !important;
+}
+
+/* Dropdown por encima de todo */
+.neu-navbar .dropdown-menu{
+  z-index: 6000 !important;
+  position: absolute;
+}
+
+/* A veces Bootstrap mete un transform en navbar/collapse y crea stacking context raro */
+.neu-navbar .navbar-collapse,
+.neu-navbar .navbar-nav,
+.neu-navbar .dropdown{
+  transform: none !important;
+}
+
+/* Fondo del dropdown más sólido para que no “se mezcle” visualmente */
+.neu-dropdown{
+  background: rgba(20,10,35,.98) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  box-shadow: 0 22px 60px rgba(0,0,0,.65) !important;
+}
+
+/* Asegura que los items siempre reciban click */
+.neu-dropdown,
+.neu-dropdown *{
+  pointer-events: auto;
+}
+/* =====================================================
+   FIX GLOBAL SELECT / DROPDOWN (texto oscuro)
+   ===================================================== */
+
+/* Select cerrado */
+select,
+.form-select {
+  background-color: rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* Opciones desplegadas */
+select option {
+  background-color: #1a1a24 !important;
+  color: #ffffff !important;
+}
+
+/* Hover y seleccionado */
+select option:hover,
+select option:checked {
+  background-color: #6c2bd9 !important;
+  color: #ffffff !important;
+}
+
+/* Fix Firefox */
+select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #ffffff;
+}
+
+/* Focus */
+select:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(182,107,255,.35);
+  border-color: rgba(182,107,255,.8);
+}
+/* =========================
+   LOGO EN NAVBAR
+   ========================= */
+
+/* Logo imagen */
+.neu-logo {
+  height: 45px;
+  width: auto;
+  max-width: 45px;
+  border-radius: 50%;
+  object-fit: contain;
+  padding: 4px;
+  filter: drop-shadow(0 0 8px rgba(182, 107, 255, 0.3));
+  transition: all 0.3s ease;
+}
+
+/* Hover effect en logo */
+.neu-brand:hover .neu-logo {
+  filter: drop-shadow(0 0 12px rgba(182, 107, 255, 0.6));
+  transform: scale(1.05);
+}
+
+/* Responsive - logo más pequeño en móvil */
+@media (max-width: 768px) {
+  .neu-logo {
+    height: 32px;
+    max-width: 32px;
+  }
+}
+
+/* Variante: Si quieres el logo circular */
+.neu-logo.circular {
+  border-radius: 50%;
+  border: 2px solid rgba(182, 107, 255, 0.3);
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Variante: Si quieres SOLO logo (sin punto ni texto) */
+.neu-brand.logo-only {
+  gap: 0;
+}
+
+.neu-brand.logo-only .neu-dot,
+.neu-brand.logo-only .neu-brand-text {
+  display: none;
+}
+
+.neu-brand.logo-only .neu-logo {
+  height: 45px;
+  max-width: 45px;
+}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nueva Disponibilidad{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/availability_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-availability-form">
+
+  <!-- Header -->
+  <div class="neu-page-head mb-4">
+    <h2 class="neu-title">Registrar Disponibilidad / Reunión</h2>
+    <p class="neu-subtitle">
+      Registra reuniones, ausencias o bloques de tiempo para el calendario del equipo.
+    </p>
+  </div>
+
+  <!-- Card blanca -->
+  <div class="neu-white-form">
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <!-- Título -->
+      <div class="form-group">
+        <label class="form-label">Título</label>
+        {{ form.title }}
+      </div>
+
+      <!-- Fechas -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Inicio</label>
+          {{ form.start_datetime }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fin</label>
+          {{ form.end_datetime }}
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        {{ form.description }}
+      </div>
+
+      <!-- Enlace -->
+      <div class="form-group">
+        <label class="form-label">Enlace (opcional)</label>
+        {{ form.link }}
+      </div>
+
+      <!-- Acciones -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          Guardar
+        </button>
+        <a href="{% url 'availability_list' %}" class="btn btn-outline-secondary">
+          Cancelar
+        </a>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

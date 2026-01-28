@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+{% load money %}
+
+{% block title %}{% if edit %}Editar Subtarea{% else %}Nueva Subtarea{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/subtask_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-subtask-page">
+
+  <div class="neu-subtask-head">
+    <div>
+      <h2 class="neu-subtask-title">
+        {% if edit %}Editar Subtarea{% else %}Nueva Subtarea{% endif %}
+      </h2>
+
+      {% if task %}
+        <div class="neu-subtask-meta">
+          <span class="neu-tag"><strong>Tarea:</strong> {{ task.title }}</span>
+          <span class="neu-tag"><strong>Proyecto:</strong> {{ task.project.name }}</span>
+          <span class="neu-tag"><strong>Presupuesto restante:</strong> {{ task.remaining_budget|cop }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="neu-subtask-actions">
+      {% if task %}
+        <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-secondary neu-btn-sm">Volver</a>
+      {% else %}
+        <a href="{% url 'task_list' %}" class="btn btn-outline-secondary neu-btn-sm">Volver</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card neu-card p-3">
+    <div class="neu-card-title">Datos de la subtarea</div>
+
+    <form method="post" enctype="multipart/form-data" class="neu-form">
+      {% csrf_token %}
+
+      {# Si tu SubTaskForm incluye campo task, lo ocultamos en edición desde detalle #}
+      {% if form.task %}
+        <div class="d-none">
+          {{ form.task }}
+        </div>
+      {% endif %}
+
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <label class="form-label" for="{{ form.title.id_for_label }}">Título</label>
+          {{ form.title }}
+          {% if form.title.errors %}<div class="neu-err">{{ form.title.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-lg-6">
+          <label class="form-label" for="{{ form.story_points.id_for_label }}">Story Points</label>
+          {{ form.story_points }}
+          {% if form.story_points.errors %}<div class="neu-err">{{ form.story_points.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label" for="{{ form.description.id_for_label }}">Descripción</label>
+          {{ form.description }}
+          {% if form.description.errors %}<div class="neu-err">{{ form.description.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-lg-4">
+          <label class="form-label" for="{{ form.budget.id_for_label }}">Presupuesto</label>
+          {{ form.budget }}
+          {% if form.budget.errors %}<div class="neu-err">{{ form.budget.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-lg-4">
+          <label class="form-label" for="{{ form.status.id_for_label }}">Estado</label>
+          {{ form.status }}
+          {% if form.status.errors %}<div class="neu-err">{{ form.status.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-lg-4">
+          <label class="form-label" for="{{ form.attachment.id_for_label }}">Adjunto</label>
+          {{ form.attachment }}
+          {% if form.attachment.errors %}<div class="neu-err">{{ form.attachment.errors }}</div>{% endif %}
+          <div class="neu-help">Opcional. PDF/imagen u otro archivo.</div>
+        </div>
+      </div>
+
+      <div class="neu-form-actions">
+        <button type="submit" class="btn btn-primary">
+          {% if edit %}Guardar cambios{% else %}Crear subtarea{% endif %}
+        </button>
+
+        {% if task %}
+          <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        {% else %}
+          <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

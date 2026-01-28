@@ -1,0 +1,102 @@
+.neu-subtask-page{
+  padding-bottom: 1.25rem;
+}
+
+.neu-subtask-head{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.neu-subtask-title{
+  margin: 0 0 .35rem 0;
+  color: #fff;
+  font-weight: 850;
+  font-size: 1.85rem;
+}
+
+.neu-subtask-actions{
+  display:flex;
+  gap:.5rem;
+  flex-wrap: wrap;
+}
+
+.neu-btn-sm{
+  border-radius: 999px;
+  padding: .35rem .75rem;
+}
+
+/* Tags */
+.neu-subtask-meta{
+  display:flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.neu-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.28rem .6rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(234,231,242,.95);
+  font-size: .88rem;
+}
+.neu-tag strong{
+  color: rgba(234,231,242,.78);
+  font-weight: 800;
+}
+
+/* Card */
+.neu-card{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(0,0,0,.35);
+}
+
+.neu-card-title{
+  color:#fff;
+  font-weight: 850;
+  margin-bottom: .75rem;
+}
+
+/* Form */
+.neu-form .form-label{
+  color: rgba(234,231,242,.82);
+  font-weight: 800;
+}
+
+.neu-form input,
+.neu-form select,
+.neu-form textarea{
+  width: 100%;
+}
+
+.neu-form textarea{
+  min-height: 120px;
+}
+
+.neu-form-actions{
+  display:flex;
+  gap:.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* Errors / help */
+.neu-err{
+  margin-top: .35rem;
+  color: #ffb4b4;
+  font-weight: 700;
+  font-size: .9rem;
+}
+.neu-help{
+  margin-top: .35rem;
+  color: rgba(234,231,242,.62);
+  font-size: .85rem;
+}

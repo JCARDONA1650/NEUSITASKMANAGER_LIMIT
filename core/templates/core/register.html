@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Crear usuario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reg-wrapper">
+  <div class="reg-card">
+
+    <div class="reg-header">
+      <div class="reg-logo">
+        <span class="reg-dot"></span>
+      </div>
+      <h1 class="reg-title">Crear usuario</h1>
+      <p class="reg-subtitle">Solo administradores pueden registrar cuentas nuevas (versión FREE con límites).</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-danger{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" class="reg-form">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label" for="id_username">Usuario</label>
+        <input
+          type="text"
+          name="username"
+          id="id_username"
+          class="form-control"
+          autocomplete="off"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_password1">Contraseña</label>
+        <input
+          type="password"
+          name="password1"
+          id="id_password1"
+          class="form-control"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_password2">Confirmar contraseña</label>
+        <input
+          type="password"
+          name="password2"
+          id="id_password2"
+          class="form-control"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="id_role">Rol</label>
+        <select name="role" id="id_role" class="form-select">
+          {% for val, label in role_choices %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <div class="reg-hint">
+          Admin/Leader/Scrum cuentan como “admin-tier” (para límites).
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <a class="btn btn-outline-light" href="/">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Crear</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

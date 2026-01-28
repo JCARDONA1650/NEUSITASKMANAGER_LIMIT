@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+
+{% block title %}Backlog{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/tasks.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page">
+  <div class="neu-page-head">
+    <div>
+      <h2 class="neu-title">Backlog de tareas</h2>
+      <p class="neu-subtitle">Agrupado por proyecto y estado, con filtros rápidos.</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="neu-filters card p-3 mb-3">
+    <div class="row g-3 align-items-end">
+
+      <div class="col-lg-3 col-md-6">
+        <label for="project" class="form-label">Proyecto</label>
+        <select name="project" id="project" class="form-select">
+          <option value="">Todos</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}" {% if p.id|stringformat:"s" == selected_project %}selected{% endif %}>
+              {{ p.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="sprint" class="form-label">Sprint</label>
+        <select name="sprint" id="sprint" class="form-select">
+          <option value="">Todos</option>
+          {% for s in sprints %}
+            <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_sprint %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="responsible" class="form-label">Responsable</label>
+        <select name="responsible" id="responsible" class="form-select">
+          <option value="">Todos</option>
+          {% for r in responsibles %}
+            <option value="{{ r.id }}" {% if r.id|stringformat:"s" == selected_responsible %}selected{% endif %}>
+              {{ r.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label for="status" class="form-label">Estado</label>
+        <select name="status" id="status" class="form-select">
+          <option value="">Todos</option>
+          <option value="new" {% if selected_status == "new" %}selected{% endif %}>Nueva</option>
+          <option value="in_progress" {% if selected_status == "in_progress" %}selected{% endif %}>En progreso</option>
+          <option value="completed" {% if selected_status == "completed" %}selected{% endif %}>Completada</option>
+        </select>
+      </div>
+
+      <div class="col-lg-6 col-md-8">
+        <label for="q" class="form-label">Buscar</label>
+        <input
+          type="text"
+          class="form-control"
+          id="q"
+          name="q"
+          value="{{ q|default:'' }}"
+          placeholder="Buscar por título, épica, sprint…"
+        />
+      </div>
+
+      <div class="col-lg-6 col-md-4 d-flex gap-2 justify-content-md-end">
+        <button type="submit" class="btn btn-primary neu-btn">
+          Aplicar filtros
+        </button>
+        <a href="{% url 'task_list' %}" class="btn btn-outline-secondary neu-btn">
+          Limpiar
+        </a>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- Contenido: agrupado por proyecto -->
+  {% if grouped %}
+    <div class="accordion neu-accordion" id="projectsAccordion">
+
+      {% for group in grouped %}
+        <div class="accordion-item neu-acc-item">
+          <h2 class="accordion-header" id="headingProject{{ forloop.counter }}">
+            <button class="accordion-button neu-acc-btn {% if not forloop.first %}collapsed{% endif %}"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseProject{{ forloop.counter }}"
+                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                    aria-controls="collapseProject{{ forloop.counter }}">
+              <div class="d-flex flex-column flex-md-row gap-2 w-100 justify-content-between align-items-md-center">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="neu-dot-sm"></span>
+                  <span class="neu-project-name">{{ group.project.name }}</span>
+                </div>
+
+                <div class="neu-project-meta">
+                  <span class="neu-pill">Total: {{ group.total }}</span>
+                  <span class="neu-pill neu-pill-new">Nuevas: {{ group.count_new }}</span>
+                  <span class="neu-pill neu-pill-progress">En progreso: {{ group.count_in_progress }}</span>
+                  <span class="neu-pill neu-pill-done">Completadas: {{ group.count_completed }}</span>
+                </div>
+              </div>
+            </button>
+          </h2>
+
+          <div id="collapseProject{{ forloop.counter }}"
+               class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+               aria-labelledby="headingProject{{ forloop.counter }}"
+               data-bs-parent="#projectsAccordion">
+            <div class="accordion-body">
+
+              <!-- Estados dentro del proyecto -->
+              <div class="accordion neu-inner-accordion" id="statusAccordion{{ forloop.counter }}">
+
+                <!-- NUEVAS -->
+                <div class="accordion-item neu-acc-subitem">
+                  <h2 class="accordion-header" id="headingNew{{ forloop.counter }}">
+                    <button class="accordion-button neu-acc-btn-sm collapsed"
+                            type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseNew{{ forloop.counter }}"
+                            aria-expanded="false"
+                            aria-controls="collapseNew{{ forloop.counter }}">
+                      <span class="neu-section-title">Nuevas</span>
+                      <span class="neu-count-badge">{{ group.count_new }}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseNew{{ forloop.counter }}" class="accordion-collapse collapse"
+                       aria-labelledby="headingNew{{ forloop.counter }}"
+                       data-bs-parent="#statusAccordion{{ forloop.counter }}">
+                    <div class="accordion-body">
+                      {% include "core/partials/task_table.html" with tasks=group.tasks_new only %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EN PROGRESO -->
+                <div class="accordion-item neu-acc-subitem">
+                  <h2 class="accordion-header" id="headingProg{{ forloop.counter }}">
+                    <button class="accordion-button neu-acc-btn-sm collapsed"
+                            type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseProg{{ forloop.counter }}"
+                            aria-expanded="false"
+                            aria-controls="collapseProg{{ forloop.counter }}">
+                      <span class="neu-section-title">En progreso</span>
+                      <span class="neu-count-badge">{{ group.count_in_progress }}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseProg{{ forloop.counter }}" class="accordion-collapse collapse"
+                       aria-labelledby="headingProg{{ forloop.counter }}"
+                       data-bs-parent="#statusAccordion{{ forloop.counter }}">
+                    <div class="accordion-body">
+                      {% include "core/partials/task_table.html" with tasks=group.tasks_in_progress only %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- COMPLETADAS -->
+                <div class="accordion-item neu-acc-subitem">
+                  <h2 class="accordion-header" id="headingDone{{ forloop.counter }}">
+                    <button class="accordion-button neu-acc-btn-sm collapsed"
+                            type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseDone{{ forloop.counter }}"
+                            aria-expanded="false"
+                            aria-controls="collapseDone{{ forloop.counter }}">
+                      <span class="neu-section-title">Completadas</span>
+                      <span class="neu-count-badge">{{ group.count_completed }}</span>
+                    </button>
+                  </h2>
+                  <div id="collapseDone{{ forloop.counter }}" class="accordion-collapse collapse"
+                       aria-labelledby="headingDone{{ forloop.counter }}"
+                       data-bs-parent="#statusAccordion{{ forloop.counter }}">
+                    <div class="accordion-body">
+                      {% include "core/partials/task_table.html" with tasks=group.tasks_completed only %}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <!-- /Estados -->
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+    </div>
+
+  {% else %}
+    <div class="card p-4">
+      <h5 class="mb-1">No hay tareas disponibles.</h5>
+      <p class="mb-0 text-muted">Crea una tarea o ajusta los filtros.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+/* neural-background-styles.css (OPCIONAL - mejora de rendimiento) */
+
+/* Canvas de fondo neural */
+#neural-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeInCanvas 1s ease-in forwards;
+}
+
+@keyframes fadeInCanvas {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Optimización para móviles */
+@media (max-width: 768px) {
+  #neural-canvas {
+    /* Reducir opacidad en móviles para mejor rendimiento */
+    opacity: 0.6;
+  }
+}
+
+/* Modo de ahorro de energía (opcional) */
+@media (prefers-reduced-motion: reduce) {
+  #neural-canvas {
+    display: none;
+  }
+}
+
+/* Mejora de rendimiento del body */
+body.neu-body {
+  /* Asegurar que el canvas no cause reflow */
+  position: relative;
+  overflow-x: hidden;
+}

@@ -1,0 +1,115 @@
+/* --------------------------------------------------
+   REGISTER (ADMIN) – NEUSI STYLE
+-------------------------------------------------- */
+
+.reg-wrapper{
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.reg-card{
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  padding: 2.5rem 2.2rem 2rem;
+  backdrop-filter: blur(12px);
+}
+
+/* Header */
+.reg-header{
+  text-align: center;
+  margin-bottom: 1.6rem;
+}
+
+.reg-logo{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.reg-dot{
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #b66bff;
+  box-shadow:
+    0 0 0 6px rgba(182,107,255,.18),
+    0 0 22px rgba(182,107,255,.55);
+}
+
+.reg-title{
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: .35rem;
+}
+
+.reg-subtitle{
+  font-size: .92rem;
+  color: rgba(234,231,242,.72);
+  margin: 0;
+}
+
+/* Form */
+.reg-form .form-label{
+  color: rgba(234,231,242,.8);
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+
+.reg-form input,
+.reg-form select{
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  padding: .55rem .7rem;
+  color: rgba(234,231,242,.95);
+}
+
+.reg-form input:focus,
+.reg-form select:focus{
+  outline: none;
+  background: rgba(255,255,255,.08);
+  border-color: rgba(182,107,255,.55);
+  box-shadow: 0 0 0 .25rem rgba(182,107,255,.14);
+}
+
+.reg-hint{
+  margin-top: .35rem;
+  font-size: .85rem;
+  color: rgba(234,231,242,.65);
+  font-weight: 600;
+}
+
+/* Alerts */
+.reg-card .alert{
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.35);
+  color: #fff;
+  border-radius: 14px;
+  padding: .6rem .75rem;
+  margin-bottom: 1rem;
+}
+
+/* Buttons */
+.reg-card .btn{
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.reg-card .btn-outline-light{
+  border-color: rgba(255,255,255,.22) !important;
+  color: rgba(255,255,255,.9) !important;
+}
+
+.reg-card .btn-outline-light:hover{
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.35) !important;
+}

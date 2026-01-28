@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registrar Daily{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/daily_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page">
+
+  <div class="neu-page-head">
+    <div>
+      <h2 class="neu-title">Registrar Daily</h2>
+      <p class="neu-subtitle">
+        Resume tu avance diario. Sé claro y concreto.
+      </p>
+    </div>
+  </div>
+
+  <div class="card neu-card p-4">
+
+    <form method="post" class="neu-daily-form">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="neu-field">
+          <label class="form-label">
+            {{ field.label }}
+          </label>
+
+          {{ field }}
+
+          {% if field.help_text %}
+            <div class="neu-help">{{ field.help_text }}</div>
+          {% endif %}
+
+          {% if field.errors %}
+            <div class="neu-error">
+              {{ field.errors|striptags }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="neu-form-actions">
+        <button type="submit" class="btn btn-success neu-btn">
+          Guardar Daily
+        </button>
+        <a href="{% url 'daily_list' %}" class="btn btn-outline-secondary neu-btn">
+          Cancelar
+        </a>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+{% endblock %}

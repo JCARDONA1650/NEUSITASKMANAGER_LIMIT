@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
+{% load money %}
+
+{% block title %}
+  {% if form.instance.pk %}Editar Tarea{% else %}Nueva Tarea{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/task_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="neu-page neu-task-form">
+
+  <!-- Header -->
+  <div class="neu-page-head mb-3">
+    <div>
+      <h2 class="neu-title">
+        {% if form.instance.pk %}Editar Tarea Principal{% else %}Crear Tarea Principal{% endif %}
+      </h2>
+      <p class="neu-subtitle">
+        La tarea principal define el alcance general. Las subtareas se gestionan dentro de ella.
+      </p>
+    </div>
+  </div>
+
+  {% if form.errors %}
+    <div class="alert alert-danger neu-alert mb-3">
+      <strong>No se pudo guardar la tarea.</strong>
+
+      {% if form.non_field_errors %}
+        <ul class="mb-2 mt-2">
+          {% for err in form.non_field_errors %}
+            <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <ul class="mb-0 mt-2">
+        {% for bf in form %}
+          {% if bf.errors %}
+            {% for err in bf.errors %}
+              <li><strong>{{ bf.label }}:</strong> {{ err }}</li>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </ul>
+
+      <div class="small mt-2">
+        ⚠️ Revisa coherencia: <b>Proyecto</b> debe coincidir con <b>Sprint</b> y <b>Épica</b>.
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Form -->
+  <form method="post" class="card neu-card p-4" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-3">
+
+      <!-- Título -->
+      <div class="col-lg-12">
+        <label class="form-label">Título</label>
+        {{ form.title }}
+      </div>
+
+      <!-- Descripción -->
+      <div class="col-lg-12">
+        <label class="form-label">Descripción</label>
+        {{ form.description }}
+      </div>
+
+      <!-- ✅ KPIs -->
+      <div class="col-lg-12">
+        <label class="form-label">KPIs (Objetivos / métricas)</label>
+        {{ form.kpis }}
+        <div class="neu-muted small mt-1">
+          Define métricas claras: tiempos, % de avance, calidad, entregables, etc.
+        </div>
+      </div>
+
+      <!-- Proyecto / Sprint / Épica -->
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label">Proyecto</label>
+        {{ form.project }}
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label">Sprint</label>
+        {{ form.sprint }}
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label">Épica</label>
+        {{ form.epic }}
+      </div>
+
+      <!-- Story Points / Prioridad / Estado -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Story Points</label>
+        {{ form.story_points }}
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Prioridad</label>
+        {{ form.priority }}
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Estado</label>
+        {{ form.status }}
+      </div>
+
+      <!-- Presupuesto -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Presupuesto asignado</label>
+        {{ form.budget }}
+      </div>
+
+      <!-- Responsables -->
+      <div class="col-lg-12">
+        <label class="form-label">Responsables</label>
+        {{ form.responsibles }}
+        <div class="neu-muted small mt-1">
+          Selecciona uno o varios responsables con <b>Ctrl</b>.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex gap-2 justify-content-end mt-4">
+      <a href="{% url 'task_list' %}" class="btn btn-outline-secondary neu-btn">
+        Cancelar
+      </a>
+      <button type="submit" class="btn btn-primary neu-btn">
+        Guardar Tarea
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

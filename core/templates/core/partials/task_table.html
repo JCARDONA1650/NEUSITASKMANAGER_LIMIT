@@ -1,0 +1,92 @@
+{% load role_tags %}
+
+<div class="neu-table-wrap">
+  <div class="table-responsive">
+    <table class="table neu-table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Sprint</th>
+          <th>Épica</th>
+          <th>Story Points</th>
+          <th>Responsables</th>
+          <th>Estado</th>
+          <th>Prioridad</th>
+          <th class="text-end">Presupuesto</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for task in tasks %}
+          <tr>
+            <td class="neu-td-title">
+              <div class="neu-title-main">{{ task.title }}</div>
+              {% if task.description %}
+                <div class="neu-title-sub text-truncate">{{ task.description }}</div>
+              {% endif %}
+            </td>
+
+            <td>{% if task.sprint %}{{ task.sprint.name }}{% else %}—{% endif %}</td>
+            <td>{% if task.epic %}{{ task.epic.name }}{% else %}—{% endif %}</td>
+
+            <td>
+              <span class="neu-chip neu-chip-sp">{{ task.story_points }}</span>
+            </td>
+
+            <td class="neu-td-resp">
+              {% if task.responsibles.all %}
+                <div class="neu-resp-wrap">
+                  {% for u in task.responsibles.all %}
+                    <span class="neu-chip neu-chip-user">{% firstof u.get_full_name u.username %}</span>
+                  {% empty %}
+                    —
+                  {% endfor %}
+                </div>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            <td>
+              {% if task.status == "new" %}
+                <span class="neu-chip neu-chip-new">{{ task.get_status_display }}</span>
+              {% elif task.status == "in_progress" %}
+                <span class="neu-chip neu-chip-prog">{{ task.get_status_display }}</span>
+              {% else %}
+                <span class="neu-chip neu-chip-done">{{ task.get_status_display }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="neu-chip neu-chip-priority">{{ task.get_priority_display }}</span>
+            </td>
+
+            <td class="text-end">
+              $ {{ task.budget|floatformat:0 }}
+            </td>
+
+            <td class="text-end">
+              <a href="{% url 'task_detail' task.pk %}" class="btn btn-sm btn-primary neu-btn-sm">
+                Abrir
+              </a>
+
+              {% if user|has_group:'admin' or user|has_group:'leader' or user|has_group:'scrum' or user.is_superuser %}
+                <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-outline-light neu-btn-sm">
+                  Editar
+                </a>
+                <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-outline-danger neu-btn-sm">
+                  Eliminar
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="9" class="text-center text-muted py-4">No hay tareas en esta sección.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

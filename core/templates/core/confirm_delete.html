@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --danger-color: #ef4444;
+        --border-color: #e5e7eb;
+        --bg-white: #ffffff;
+        --text-gray: #6b7280;
+    }
+
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #f8f9fa;
+    }
+
+    .confirm-container {
+        max-width: 500px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .confirm-card {
+        background: var(--bg-white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .confirm-icon {
+        width: 64px;
+        height: 64px;
+        background: #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+    }
+
+    .confirm-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #1a1a1a;
+    }
+
+    .confirm-message {
+        color: var(--text-gray);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .object-details {
+        background: #f9fafb;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .object-details dt {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+        font-size: 0.85rem;
+    }
+
+    .object-details dd {
+        margin-bottom: 1rem;
+        color: var(--text-gray);
+    }
+
+    .confirm-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: var(--bg-white);
+        color: #374151;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: #f9fafb;
+        border-color: #374151;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-container">
+    <div class="confirm-card">
+        <div class="confirm-icon">⚠️</div>
+        <h1 class="confirm-title">¿Confirmar eliminación?</h1>
+        <p class="confirm-message">
+            Esta acción no se puede deshacer. El evento será eliminado permanentemente.
+        </p>
+
+        <div class="object-details">
+            <dl>
+                <dt>Tipo:</dt>
+                <dd>{{ type }}</dd>
+                
+                {% if object.title %}
+                <dt>Título:</dt>
+                <dd>{{ object.title }}</dd>
+                {% endif %}
+                
+                {% if object.start_datetime %}
+                <dt>Inicio:</dt>
+                <dd>{{ object.start_datetime|date:"d/m/Y H:i" }}</dd>
+                {% endif %}
+                
+                {% if object.end_datetime %}
+                <dt>Fin:</dt>
+                <dd>{{ object.end_datetime|date:"d/m/Y H:i" }}</dd>
+                {% endif %}
+            </dl>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="confirm-actions">
+                <a href="{% url 'availability_list' %}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
