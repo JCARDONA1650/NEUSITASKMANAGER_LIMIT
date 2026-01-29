@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/notifications.css' %}">
+{% endblock %}
+
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+<div class="card neu-notifications-card">
+  <div class="neu-notifications-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h3 class="mb-1">Notificaciones</h3>
+      <div class="neu-unread">No leídas: <b>{{ unread }}</b></div>
+    </div>
+    <a class="btn btn-outline-primary neu-btn-read-all" href="{% url 'notifications_read_all' %}">
+      Marcar todo leído
+    </a>
+  </div>
+
+  <div class="neu-notifications-list mt-3">
+    {% for n in items %}
+      <div class="neu-notification-item {% if not n.is_read %}unread{% endif %}">
+        <div class="neu-notification-head">
+          <div class="flex-grow-1">
+            <div class="neu-notification-title">
+              {% if not n.is_read %}
+                <span class="neu-dot-unread"></span>
+              {% endif %}
+              {{ n.title }}
+            </div>
+            <div class="neu-notification-message">{{ n.message|linebreaksbr }}</div>
+            <div class="neu-notification-date">{{ n.created_at|date:"Y-m-d H:i" }}</div>
+          </div>
+          <div class="neu-notification-action">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'notification_read' n.pk %}">Abrir</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="neu-notifications-empty">
+        No hay notificaciones.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

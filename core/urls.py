@@ -25,7 +25,7 @@ from core.views import (
     task_update_status, task_move,
 
     # Subtasks
-    subtask_update, subtask_delete,
+    subtask_update, subtask_delete,subtask_add_comment,
 
     # Daily
     daily_list, daily_create, daily_bulk_delete,
@@ -38,6 +38,10 @@ from core.views import (
 
     # Matrices
     matrix_priority, matrix_status, export_matrix_pdf,
+
+    # Notifications
+    notifications_list, notification_mark_read, notifications_mark_all_read, notifications_unread_count,
+
 )
 
 urlpatterns = [
@@ -105,6 +109,8 @@ urlpatterns = [
     path("subtasks/<int:pk>/edit/", subtask_update, name="subtask_update"),
     path("subtasks/<int:pk>/delete/", subtask_delete, name="subtask_delete"),
 
+    path("subtasks/<int:pk>/comment/", subtask_add_comment, name="subtask_add_comment"),
+
     # ------------------------------------------------------------------
     # DAILY
     # ------------------------------------------------------------------
@@ -131,4 +137,15 @@ urlpatterns = [
     path("matrix/priority/", matrix_priority, name="matrix_priority"),
     path("matrix/status/", matrix_status, name="matrix_status"),
     path("matrix/priority/export/", export_matrix_pdf, name="export_matrix_pdf"),
+
+
+    # ------------------------------------------------------------------
+    # NOTIFICATIONS
+    # ------------------------------------------------------------------
+
+    path("notifications/", notifications_list, name="notifications_list"),
+    path("notifications/<int:pk>/read/", notification_mark_read, name="notification_read"),
+    path("notifications/read-all/", notifications_mark_all_read, name="notifications_read_all"),
+    path("notifications/unread-count/", notifications_unread_count, name="notifications_unread_count"),
+
 ]

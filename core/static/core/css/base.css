@@ -348,3 +348,37 @@ select:focus,
   height: 45px;
   max-width: 45px;
 }
+/* =========================
+   🔔 CAMPANA NOTIFICACIONES
+   ========================= */
+.neu-bell{
+  position: relative;
+  padding: .4rem .6rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #fff !important;
+  font-size: 1.05rem;
+}
+
+.neu-bell:hover{
+  background: rgba(182,107,255,.18);
+}
+
+.neu-bell-badge{
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #b66bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 3px rgba(182,107,255,.25);
+}

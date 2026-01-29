@@ -156,7 +156,6 @@ def task_list(request: HttpRequest) -> HttpResponse:
         },
     )
 
-
 @login_required
 @group_required("admin", "leader", "scrum")
 def task_create(request: HttpRequest) -> HttpResponse:
@@ -167,10 +166,24 @@ def task_create(request: HttpRequest) -> HttpResponse:
                 # 🔒 LÍMITE FREE
                 check_tasks_limit_or_raise(Task)
 
-                obj = form.save(commit=False)
-                obj.created_by = request.user
-                obj.save()
+                task = form.save(commit=False)
+                task.created_by = request.user
+                task.save()
                 form.save_m2m()
+
+                # 🔔 NOTIFICACIÓN: tarea nueva asignada
+                if task.status == Task.Status.NEW:
+                    from core.models import Notification
+
+                    for user in task.responsibles.all():
+                        Notification.objects.create(
+                            recipient=user,
+                            actor=request.user,
+                            verb="task_new_assigned",
+                            title="Nueva tarea asignada",
+                            message=f"Se te asignó la tarea: {task.title}",
+                            url=f"/tasks/{task.pk}/",
+                        )
 
                 messages.success(request, "Tarea principal creada correctamente.")
                 return redirect("task_list")
@@ -182,7 +195,6 @@ def task_create(request: HttpRequest) -> HttpResponse:
         form = TaskForm()
 
     return render(request, "core/task_form.html", {"form": form, "edit": False})
-
 
 @login_required
 def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
@@ -197,21 +209,44 @@ def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
     can_manage_task = admin_user
     logs = task.status_logs.all()
 
-    subtasks_qs = task.subtasks.all().order_by("-id")
+    # ✅ Comentarios por subtarea
+    from core.forms import SubTaskCommentForm
+
+    subtasks_qs = (
+        task.subtasks
+        .select_related("created_by")
+        .prefetch_related("comments__created_by")
+        .all()
+        .order_by("-id")
+    )
+
     subtasks = []
     for sub in subtasks_qs:
         can_edit_sub = admin_user or sub.created_by_id == request.user.id or is_task_responsible
         can_delete_sub = admin_user
+
+        comments = list(sub.comments.all())  # ordenado por Meta (-created_at)
+        first_comment = comments[0] if comments else None
+        more_comments = comments[1:] if len(comments) > 1 else []
+
         subtasks.append(
             {
                 "obj": sub,
                 "can_manage": can_edit_sub,
                 "can_edit": can_edit_sub,
                 "can_delete": can_delete_sub,
+
+                # ✅ comentarios
+                "first_comment": first_comment,
+                "more_comments": more_comments,
+                "comments_total": len(comments),
+
+                # ✅ form para comentar (modal)
+                "comment_form": SubTaskCommentForm(),
             }
         )
 
-    # Crear subtarea desde el detalle (incluye archivo)
+    # ✅ Crear subtarea desde el detalle (incluye archivo)
     if request.method == "POST":
         sub_form = SubTaskForm(request.POST, request.FILES)
         if sub_form.is_valid():
@@ -250,7 +285,6 @@ def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
         },
     )
 
-
 @login_required
 def task_move(request: HttpRequest, pk: int) -> JsonResponse:
     if request.method != "POST":
@@ -263,7 +297,7 @@ def task_move(request: HttpRequest, pk: int) -> JsonResponse:
     admin_user = is_admin(user)
 
     if not admin_user and not is_responsible:
-        return JsonResponse({"ok": False, "error": "No tienes permiso para mover esta tarea"}, status=403)
+        return JsonResponse({"ok": False, "error": "No tienes permiso"}, status=403)
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -281,22 +315,25 @@ def task_move(request: HttpRequest, pk: int) -> JsonResponse:
     if new_status == old_status:
         return JsonResponse({"ok": True})
 
+    # 🚫 Reglas para no admin
     if not admin_user:
-        allowed_forward = {
+        allowed = {
             Task.Status.NEW: Task.Status.IN_PROGRESS,
             Task.Status.IN_PROGRESS: Task.Status.COMPLETED,
         }
-        if old_status not in allowed_forward or allowed_forward[old_status] != new_status:
-            return JsonResponse({"ok": False, "error": "Solo puedes avanzar al siguiente estado"}, status=403)
+        if old_status not in allowed or allowed[old_status] != new_status:
+            return JsonResponse({"ok": False, "error": "Movimiento no permitido"}, status=403)
 
+    # 🔒 Admin: retroceso requiere comentario
     if admin_user:
         is_backward = (
             (old_status == Task.Status.COMPLETED and new_status in {Task.Status.IN_PROGRESS, Task.Status.NEW})
             or (old_status == Task.Status.IN_PROGRESS and new_status == Task.Status.NEW)
         )
         if is_backward and not comment:
-            return JsonResponse({"ok": False, "error": "Debe indicar el motivo del retroceso"}, status=400)
+            return JsonResponse({"ok": False, "error": "Debe indicar el motivo"}, status=400)
 
+    # Guardar estado
     task.status = new_status
     task.save(update_fields=["status"])
 
@@ -307,6 +344,37 @@ def task_move(request: HttpRequest, pk: int) -> JsonResponse:
         comment=comment if admin_user else "",
         created_by=user,
     )
+
+    from core.models import Notification
+
+    # 🔔 CASO 1: tarea completada → admins
+    if new_status == Task.Status.COMPLETED and not admin_user:
+        admins = User.objects.filter(
+            Q(is_superuser=True) |
+            Q(groups__name__in=["admin", "leader", "scrum"])
+        ).distinct()
+
+        for admin in admins:
+            Notification.objects.create(
+                recipient=admin,
+                actor=user,
+                verb="task_completed",
+                title="Tarea completada",
+                message=f"La tarea '{task.title}' fue completada y requiere revisión.",
+                url=f"/tasks/{task.pk}/",
+            )
+
+    # 🔔 CASO 2: admin devuelve tarea con comentario
+    if admin_user and old_status == Task.Status.COMPLETED and new_status == Task.Status.IN_PROGRESS:
+        for resp in task.responsibles.all():
+            Notification.objects.create(
+                recipient=resp,
+                actor=user,
+                verb="task_returned",
+                title="Tarea devuelta a En progreso",
+                message=f"La tarea '{task.title}' fue devuelta con observaciones:\n{comment}",
+                url=f"/tasks/{task.pk}/",
+            )
 
     return JsonResponse({"ok": True})
 
@@ -326,6 +394,55 @@ def task_update(request: HttpRequest, pk: int) -> HttpResponse:
         form = TaskForm(instance=task)
 
     return render(request, "core/task_form.html", {"form": form, "edit": True, "task": task})
+@login_required
+def task_update_status(request: HttpRequest, pk: int) -> HttpResponse:
+    task = get_object_or_404(Task, pk=pk)
+
+    if not is_admin(request.user) and not task.responsibles.filter(id=request.user.id).exists():
+        raise PermissionDenied("No tienes permiso para actualizar esta tarea.")
+
+    new_status = request.POST.get("status")
+    if new_status not in dict(Task.Status.choices):
+        messages.error(request, "Estado inválido.")
+        return redirect("task_detail", pk=pk)
+
+    old_status = task.status
+    if new_status == old_status:
+        messages.info(request, "No hubo cambios de estado.")
+        return redirect("task_detail", pk=pk)
+
+    # ✅ Guardar
+    task.status = new_status  # type: ignore
+    task.save(update_fields=["status"])
+
+    # ✅ Log (opcional pero recomendado)
+    TaskStatusLog.objects.create(
+        task=task,
+        from_status=old_status,
+        to_status=new_status,
+        comment="",  # aquí no tienes comment en este form
+        created_by=request.user,
+    )
+
+    # ✅ Notificaciones según reglas
+    # (import local para NO circular)
+    from core.notifications import (
+        notify_task_completed_to_admins,
+        notify_task_returned_with_comment,
+    )
+
+    actor = request.user
+
+    # Regla 2: cualquiera pasa a COMPLETED -> notificar admins
+    if new_status == Task.Status.COMPLETED and old_status != Task.Status.COMPLETED:
+        notify_task_completed_to_admins(task, actor)
+
+    # Regla 3 SOLO aplica si admin devuelve con comentario.
+    # Desde este form no hay campo "comment", entonces NO la disparamos aquí.
+    # Eso queda exclusivo del Kanban (task_move), donde sí existe comment.
+
+    messages.success(request, "Estado actualizado.")
+    return redirect("task_detail", pk=pk)
 
 
 @login_required
@@ -363,7 +480,10 @@ def task_update_status(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 def subtask_update(request: HttpRequest, pk: int) -> HttpResponse:
-    sub = get_object_or_404(SubTask, pk=pk)
+    sub = get_object_or_404(
+        SubTask.objects.select_related("task", "created_by").prefetch_related("comments__created_by"),
+        pk=pk,
+    )
     task = sub.task
 
     can = (
@@ -373,6 +493,14 @@ def subtask_update(request: HttpRequest, pk: int) -> HttpResponse:
     )
     if not can:
         raise PermissionDenied("No tienes permiso para editar esta subtarea.")
+
+    # ✅ Comentarios ya listos para mostrar (ordenados por Meta en SubTaskComment)
+    comments = list(sub.comments.all())
+    first_comment = comments[0] if comments else None
+    more_comments = comments[1:] if len(comments) > 1 else []
+
+    from core.forms import SubTaskCommentForm
+    comment_form = SubTaskCommentForm()
 
     if request.method == "POST":
         form = SubTaskForm(request.POST, request.FILES, instance=sub)
@@ -396,9 +524,21 @@ def subtask_update(request: HttpRequest, pk: int) -> HttpResponse:
     return render(
         request,
         "core/subtask_form.html",
-        {"form": form, "edit": True, "subtask": sub, "task": task},
-    )
+        {
+            "form": form,
+            "edit": True,
+            "subtask": sub,
+            "task": task,
 
+            # ✅ comentarios
+            "comments": comments,
+            "first_comment": first_comment,
+            "more_comments": more_comments,
+            "comments_total": len(comments),
+            "comment_form": comment_form,
+            "is_admin": is_admin(request.user),
+        },
+    )
 
 @login_required
 def subtask_delete(request: HttpRequest, pk: int) -> HttpResponse:
@@ -418,3 +558,42 @@ def subtask_delete(request: HttpRequest, pk: int) -> HttpResponse:
         "core/confirm_delete.html",
         {"object": sub, "type": "Subtarea"},
     )
+
+from core.forms import SubTaskCommentForm
+from core.models import SubTaskComment
+
+@login_required
+def subtask_add_comment(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Agrega comentario a una subtarea.
+    Permisos:
+      - Admin
+      - Creador de la subtarea
+      - Responsable de la tarea principal
+    """
+    if request.method != "POST":
+        return redirect("task_list")
+
+    sub = get_object_or_404(SubTask, pk=pk)
+    task = sub.task
+
+    can = (
+        is_admin(request.user)
+        or sub.created_by_id == request.user.id
+        or task.responsibles.filter(id=request.user.id).exists()
+    )
+    if not can:
+        raise PermissionDenied("No tienes permiso para comentar esta subtarea.")
+
+    form = SubTaskCommentForm(request.POST)
+    if form.is_valid():
+        c = form.save(commit=False)
+        c.subtask = sub
+        c.created_by = request.user
+        c.save()
+        messages.success(request, "Comentario guardado.")
+    else:
+        # Mensaje simple (sin romper UI)
+        messages.error(request, "No se pudo guardar el comentario. Revisa el texto.")
+
+    return redirect("task_detail", pk=task.pk)

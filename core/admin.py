@@ -292,6 +292,14 @@ class AvailabilityAdmin(admin.ModelAdmin):
 from django.contrib import admin
 from core.models import Daily, DailySettings
 
+from .models import SubTaskComment
+
+@admin.register(SubTaskComment)
+class SubTaskCommentAdmin(admin.ModelAdmin):
+    list_display = ("subtask", "created_by", "created_at")
+    search_fields = ("subtask__title", "body", "created_by__username")
+    list_filter = ("created_at",)
+
 
 @admin.register(Daily)
 class DailyAdmin(admin.ModelAdmin):

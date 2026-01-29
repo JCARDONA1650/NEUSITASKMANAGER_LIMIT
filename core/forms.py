@@ -226,7 +226,28 @@ class SubTaskForm(forms.ModelForm):
             )
         return budget
 
+from .models import SubTaskComment
 
+
+class SubTaskCommentForm(forms.ModelForm):
+    class Meta:
+        model = SubTaskComment
+        fields = ("body",)
+        widgets = {
+            "body": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": "Escribe un comentario de avance...",
+                    "class": "form-control",
+                }
+            )
+        }
+
+    def clean_body(self):
+        body = (self.cleaned_data.get("body") or "").strip()
+        if not body:
+            raise ValidationError("El comentario no puede ir vacío.")
+        return body
 # ---------------------------------------------------------------------
 # DAILY
 # ---------------------------------------------------------------------

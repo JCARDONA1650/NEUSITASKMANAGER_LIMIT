@@ -13,8 +13,23 @@ from django.utils import timezone  # type: ignore
 
 User = get_user_model()
 
+class Notification(models.Model):
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="notifications_sent")
 
+    verb = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    message = models.TextField(blank=True)
+    url = models.CharField(max_length=300, blank=True)
 
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:
+        return f"{self.recipient} - {self.verb} - {self.title}"
 class PlanLimits(models.Model):
     """
     Plan FREE: límites globales de la app.
@@ -262,6 +277,33 @@ class SubTask(models.Model):
 
     def __str__(self) -> str:
         return f"{self.task.title} > {self.title}"
+
+class SubTaskComment(models.Model):
+    """
+    Comentarios de avance por subtarea.
+    Guarda historial: quién, cuándo, qué comentó.
+    """
+    subtask = models.ForeignKey(
+        "SubTask",
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    body = models.TextField()
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="subtask_comments_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:
+        who = getattr(self.created_by, "username", None) or "Sistema"
+        return f"Comment by {who} on SubTask #{self.subtask_id}"
 
 
 class Daily(models.Model):

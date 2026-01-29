@@ -9,96 +9,226 @@
 {% endblock %}
 
 {% block content %}
-<div class="neu-subtask-page">
+<div class="neu-page neu-subtask-form">
 
-  <div class="neu-subtask-head">
+  <div class="neu-page-head mb-3">
     <div>
-      <h2 class="neu-subtask-title">
-        {% if edit %}Editar Subtarea{% else %}Nueva Subtarea{% endif %}
-      </h2>
+      <h2 class="neu-title">{% if edit %}Editar Subtarea{% else %}Crear Subtarea{% endif %}</h2>
 
-      {% if task %}
-        <div class="neu-subtask-meta">
-          <span class="neu-tag"><strong>Tarea:</strong> {{ task.title }}</span>
-          <span class="neu-tag"><strong>Proyecto:</strong> {{ task.project.name }}</span>
-          <span class="neu-tag"><strong>Presupuesto restante:</strong> {{ task.remaining_budget|cop }}</span>
-        </div>
-      {% endif %}
+      <div class="neu-tags mt-2">
+        <span class="neu-tag"><strong>Tarea:</strong> {{ task.title }}</span>
+        <span class="neu-tag"><strong>Proyecto:</strong> {{ task.project.name }}</span>
+        <span class="neu-tag"><strong>Presupuesto restante:</strong> {{ task.remaining_budget|cop }}</span>
+      </div>
     </div>
 
-    <div class="neu-subtask-actions">
-      {% if task %}
-        <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-secondary neu-btn-sm">Volver</a>
-      {% else %}
-        <a href="{% url 'task_list' %}" class="btn btn-outline-secondary neu-btn-sm">Volver</a>
-      {% endif %}
+    <div>
+      <a class="btn btn-outline-secondary neu-btn" href="{% url 'task_detail' task.pk %}">Volver</a>
     </div>
   </div>
 
-  <div class="card neu-card p-3">
-    <div class="neu-card-title">Datos de la subtarea</div>
+  <!-- Form -->
+  <form method="post" enctype="multipart/form-data" class="card neu-card p-4" novalidate>
+    {% csrf_token %}
 
-    <form method="post" enctype="multipart/form-data" class="neu-form">
-      {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
 
-      {# Si tu SubTaskForm incluye campo task, lo ocultamos en edición desde detalle #}
-      {% if form.task %}
-        <div class="d-none">
-          {{ form.task }}
-        </div>
-      {% endif %}
-
-      <div class="row g-3">
-        <div class="col-lg-6">
-          <label class="form-label" for="{{ form.title.id_for_label }}">Título</label>
-          {{ form.title }}
-          {% if form.title.errors %}<div class="neu-err">{{ form.title.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-lg-6">
-          <label class="form-label" for="{{ form.story_points.id_for_label }}">Story Points</label>
-          {{ form.story_points }}
-          {% if form.story_points.errors %}<div class="neu-err">{{ form.story_points.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-12">
-          <label class="form-label" for="{{ form.description.id_for_label }}">Descripción</label>
-          {{ form.description }}
-          {% if form.description.errors %}<div class="neu-err">{{ form.description.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-lg-4">
-          <label class="form-label" for="{{ form.budget.id_for_label }}">Presupuesto</label>
-          {{ form.budget }}
-          {% if form.budget.errors %}<div class="neu-err">{{ form.budget.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-lg-4">
-          <label class="form-label" for="{{ form.status.id_for_label }}">Estado</label>
-          {{ form.status }}
-          {% if form.status.errors %}<div class="neu-err">{{ form.status.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-lg-4">
-          <label class="form-label" for="{{ form.attachment.id_for_label }}">Adjunto</label>
-          {{ form.attachment }}
-          {% if form.attachment.errors %}<div class="neu-err">{{ form.attachment.errors }}</div>{% endif %}
-          <div class="neu-help">Opcional. PDF/imagen u otro archivo.</div>
-        </div>
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <label class="form-label">Título</label>
+        {{ form.title }}
+        {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
       </div>
 
-      <div class="neu-form-actions">
-        <button type="submit" class="btn btn-primary">
-          {% if edit %}Guardar cambios{% else %}Crear subtarea{% endif %}
-        </button>
+      <div class="col-lg-4">
+        <label class="form-label">Story Points</label>
+        {{ form.story_points }}
+        {% if form.story_points.errors %}<div class="text-danger small">{{ form.story_points.errors }}</div>{% endif %}
+      </div>
 
-        {% if task %}
-          <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-secondary">Cancelar</a>
-        {% else %}
-          <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+      <div class="col-lg-12">
+        <label class="form-label">Descripción</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <label class="form-label">Presupuesto</label>
+        {{ form.budget }}
+        {% if form.budget.errors %}<div class="text-danger small">{{ form.budget.errors }}</div>{% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <label class="form-label">Estado</label>
+        {{ form.status }}
+        {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}</div>{% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <label class="form-label">Adjunto</label>
+        {{ form.attachment }}
+        {% if form.attachment.errors %}<div class="text-danger small">{{ form.attachment.errors }}</div>{% endif %}
+        <div class="neu-muted small mt-1">Opcional. PDF/imagen u otro archivo.</div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button class="btn btn-primary neu-btn" type="submit">Guardar cambios</button>
+      <a class="btn btn-outline-secondary neu-btn" href="{% url 'task_detail' task.pk %}">Cancelar</a>
+    </div>
+  </form>
+
+  <!-- ✅ Comentarios de Subtarea -->
+  <div class="card neu-card p-4 mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="neu-card-title mb-0">Comentarios de avance</div>
+
+      <button type="button"
+              class="btn btn-outline-secondary neu-btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#subtaskCommentsModal{{ subtask.pk }}">
+        {% if comments_total > 0 %}Ver / Agregar{% else %}Agregar comentario{% endif %}
+      </button>
+    </div>
+
+    {% if comments_total > 0 %}
+      <div class="mt-3">
+        <div class="neu-cmt-card">
+          <div class="neu-cmt-meta">
+            {% if first_comment.created_by %}
+              {{ first_comment.created_by.get_full_name|default:first_comment.created_by.username }}
+            {% else %}
+              Sistema
+            {% endif %}
+            · {{ first_comment.created_at|date:"Y-m-d H:i" }}
+          </div>
+          <div class="neu-cmt-body-full">
+            {{ first_comment.body|linebreaksbr }}
+          </div>
+        </div>
+
+        {% if comments_total > 1 %}
+          <div class="mt-3">
+            <button class="btn btn-outline-secondary neu-btn-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseMoreCommentsSub{{ subtask.pk }}"
+                    aria-expanded="false"
+                    aria-controls="collapseMoreCommentsSub{{ subtask.pk }}">
+              Ver más ({{ comments_total|add:"-1" }})
+            </button>
+
+            <div class="collapse mt-2" id="collapseMoreCommentsSub{{ subtask.pk }}">
+              <div class="neu-cmt-stack">
+                {% for c in more_comments %}
+                  <div class="neu-cmt-card">
+                    <div class="neu-cmt-meta">
+                      {% if c.created_by %}
+                        {{ c.created_by.get_full_name|default:c.created_by.username }}
+                      {% else %}
+                        Sistema
+                      {% endif %}
+                      · {{ c.created_at|date:"Y-m-d H:i" }}
+                    </div>
+                    <div class="neu-cmt-body-full">
+                      {{ c.body|linebreaksbr }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
         {% endif %}
+
+        <!-- ✅ Tabla resumen (todos) -->
+        <div class="table-responsive mt-4">
+          <table class="table neu-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th style="width: 200px;">Fecha</th>
+                <th style="width: 220px;">Responsable</th>
+                <th>Comentario</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in comments %}
+                <tr>
+                  <td class="neu-muted">{{ c.created_at|date:"Y-m-d H:i" }}</td>
+                  <td class="neu-td-strong">
+                    {% if c.created_by %}
+                      {{ c.created_by.get_full_name|default:c.created_by.username }}
+                    {% else %}
+                      Sistema
+                    {% endif %}
+                  </td>
+                  <td>{{ c.body|linebreaksbr }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
       </div>
-    </form>
+    {% else %}
+      <div class="neu-muted mt-3">Sin comentarios todavía.</div>
+    {% endif %}
+  </div>
+
+  <!-- ✅ Modal: ver/agregar comentario -->
+  <div class="modal fade" id="subtaskCommentsModal{{ subtask.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content neu-modal">
+        <div class="modal-header">
+          <div>
+            <div class="neu-modal-title">Comentarios – {{ subtask.title }}</div>
+            <div class="neu-muted small">Tarea: {{ task.title }}</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          {% if comments_total > 0 %}
+            <div class="neu-cmt-stack">
+              {% for c in comments %}
+                <div class="neu-cmt-card">
+                  <div class="neu-cmt-meta">
+                    {% if c.created_by %}
+                      {{ c.created_by.get_full_name|default:c.created_by.username }}
+                    {% else %}
+                      Sistema
+                    {% endif %}
+                    · {{ c.created_at|date:"Y-m-d H:i" }}
+                  </div>
+                  <div class="neu-cmt-body-full">
+                    {{ c.body|linebreaksbr }}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="neu-muted">Sin comentarios todavía.</div>
+          {% endif %}
+
+          <hr class="my-4" style="border-color: rgba(255,255,255,.12);">
+
+          <div class="card neu-card p-3">
+            <div class="neu-card-title">Agregar comentario</div>
+            <form method="post" action="{% url 'subtask_add_comment' subtask.pk %}">
+              {% csrf_token %}
+              {{ comment_form.as_p }}
+              <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary">Guardar comentario</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>

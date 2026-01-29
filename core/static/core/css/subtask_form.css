@@ -100,3 +100,53 @@
   color: rgba(234,231,242,.62);
   font-size: .85rem;
 }
+/* core/css/subtask_form.css */
+
+.neu-title{ color:#fff; font-weight:900; letter-spacing:.2px; margin:0; }
+.neu-card{ background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; box-shadow: 0 18px 42px rgba(0,0,0,.35); }
+.neu-card-title{ color:#fff; font-weight:900; letter-spacing:.2px; }
+.neu-muted{ color: rgba(234,231,242,.68) !important; }
+
+.neu-tags{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.neu-tag{
+  display:inline-flex; gap:.35rem; align-items:center;
+  padding:.28rem .6rem; border-radius:999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(234,231,242,.95);
+  font-size:.88rem;
+}
+.neu-tag strong{ color: rgba(234,231,242,.78); font-weight:800; }
+
+.neu-btn{ border-radius: 999px; padding: .45rem .9rem; }
+.neu-btn-sm{ border-radius: 999px; padding: .35rem .75rem; }
+
+.neu-table{ color: rgba(234,231,242,.94); }
+.neu-table thead th{
+  color: rgba(234,231,242,.82);
+  font-weight: 900;
+  border-bottom: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.04);
+}
+.neu-table td{
+  border-color: rgba(255,255,255,.10) !important;
+  background: rgba(0,0,0,.10);
+}
+.neu-td-strong{ font-weight: 900; color:#fff !important; }
+
+.neu-cmt-card{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.14);
+  border-radius: 14px;
+  padding: .75rem;
+}
+.neu-cmt-meta{ color: rgba(234,231,242,.72); font-weight: 800; font-size: .85rem; margin-bottom: .35rem; }
+.neu-cmt-body-full{ color: rgba(234,231,242,.92); line-height: 1.4; }
+.neu-cmt-stack{ display:grid; gap:.6rem; }
+
+.neu-modal{
+  background: rgba(15, 10, 26, .96);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(234,231,242,.92);
+}
+.neu-modal-title{ color:#fff; font-weight: 900; }

@@ -52,6 +52,10 @@ TEMPLATES = [
     },
 ]
 
+TEMPLATES[0]["OPTIONS"]["context_processors"] += [
+    "core.context_processors.notifications_context",
+]
+
 WSGI_APPLICATION = "neusi_task_manager.wsgi.application"
 
 # Database

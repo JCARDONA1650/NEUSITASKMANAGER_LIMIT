@@ -1,0 +1,292 @@
+/* ===============================
+   NOTIFICATIONS LIST – NEUSI
+   CONTRASTE MEJORADO & LEGIBILIDAD
+   =============================== */
+
+/* Card principal */
+.neu-notifications-card {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Header */
+.neu-notifications-header h3 {
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.neu-unread {
+  color: #ffffff !important;
+  font-size: 0.95rem;
+  opacity: 0.88;
+}
+
+.neu-unread b {
+  color: #b66bff;
+  font-weight: 700;
+}
+
+/* Botón marcar todo leído */
+.neu-btn-read-all {
+  color: #ffffff !important;
+  border-color: rgba(182, 107, 255, 0.6) !important;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.neu-btn-read-all:hover {
+  background: rgba(182, 107, 255, 0.18) !important;
+  border-color: rgba(182, 107, 255, 0.85) !important;
+  transform: translateY(-1px);
+}
+
+/* ===============================
+   LISTA DE NOTIFICACIONES
+   =============================== */
+
+.neu-notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* ===============================
+   ITEM NOTIFICACIÓN
+   =============================== */
+
+.neu-notification-item {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  ) !important;
+  padding: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de brillo sutil en el fondo */
+.neu-notification-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(182, 107, 255, 0.03) 0%,
+    transparent 50%,
+    rgba(182, 107, 255, 0.03) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.neu-notification-item:hover::before {
+  opacity: 1;
+}
+
+/* Hover effect */
+.neu-notification-item:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(182, 107, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Notificación NO LEÍDA */
+.neu-notification-item.unread {
+  border-color: rgba(182, 107, 255, 0.5) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(182, 107, 255, 0.18) 0%,
+    rgba(122, 27, 176, 0.12) 100%
+  ) !important;
+  box-shadow: 0 0 0 1px rgba(182, 107, 255, 0.25);
+}
+
+.neu-notification-item.unread:hover {
+  border-color: rgba(182, 107, 255, 0.7) !important;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(182, 107, 255, 0.4),
+    0 0 20px rgba(182, 107, 255, 0.15);
+}
+
+/* Header del item */
+.neu-notification-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Título de la notificación */
+.neu-notification-title {
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Punto indicador no leído */
+.neu-dot-unread {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  background: #b66bff !important;
+  box-shadow: 
+    0 0 0 3px rgba(182, 107, 255, 0.3),
+    0 0 8px rgba(182, 107, 255, 0.6);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 3px rgba(182, 107, 255, 0.3),
+      0 0 8px rgba(182, 107, 255, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 5px rgba(182, 107, 255, 0.2),
+      0 0 12px rgba(182, 107, 255, 0.8);
+  }
+}
+
+/* Mensaje de la notificación */
+.neu-notification-message {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Fecha de la notificación */
+.neu-notification-date {
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Acción (botón abrir) */
+.neu-notification-action {
+  flex-shrink: 0;
+}
+
+.neu-notification-action a {
+  color: #ffffff !important;
+  border-color: rgba(182, 107, 255, 0.55) !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.4rem 1rem;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.neu-notification-action a:hover {
+  background: rgba(182, 107, 255, 0.25) !important;
+  border-color: rgba(182, 107, 255, 0.8) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(182, 107, 255, 0.3);
+}
+
+/* ===============================
+   ESTADO VACÍO
+   =============================== */
+
+.neu-notifications-empty {
+  color: rgba(255, 255, 255, 0.75) !important;
+  text-align: center;
+  padding: 3rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 768px) {
+  .neu-notifications-card {
+    padding: 1rem;
+  }
+
+  .neu-notifications-header h3 {
+    font-size: 1.5rem;
+  }
+
+  .neu-notification-item {
+    padding: 1rem;
+  }
+
+  .neu-notification-head {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .neu-notification-action {
+    width: 100%;
+  }
+
+  .neu-notification-action a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .neu-notification-title {
+    font-size: 1rem;
+  }
+
+  .neu-notification-message {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===============================
+   MEJORAS ADICIONALES
+   =============================== */
+
+/* Transición suave para todos los elementos */
+.neu-notification-item * {
+  transition: all 0.2s ease;
+}
+
+/* Scroll suave en la lista */
+.neu-notifications-list {
+  scroll-behavior: smooth;
+}
+
+/* Focus states para accesibilidad */
+.neu-notification-action a:focus {
+  outline: 2px solid rgba(182, 107, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.neu-btn-read-all:focus {
+  outline: 2px solid rgba(182, 107, 255, 0.8);
+  outline-offset: 2px;
+}

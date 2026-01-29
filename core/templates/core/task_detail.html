@@ -117,7 +117,7 @@
         </div>
       </div>
 
-      <!-- ✅ KPIs (solo visible si existen; puedes cambiar a "solo admin" si quieres) -->
+      <!-- KPIs -->
       <div class="card neu-card p-3 mb-3">
         <div class="neu-card-title">KPIs</div>
         <div class="neu-desc">
@@ -148,7 +148,7 @@
     </div>
   </div>
 
-  <!-- Historial (COLAPSABLE) -->
+  <!-- Historial -->
   <div class="card neu-card p-3 mb-3">
     <div class="neu-card-title d-flex justify-content-between align-items-center">
       <span>Historial</span>
@@ -156,7 +156,6 @@
     </div>
 
     {% if logs %}
-      {# 1) Primer registro visible #}
       {% with first=logs.0 %}
         <div class="neu-history-item">
           <div class="neu-history-row">
@@ -176,7 +175,6 @@
         </div>
       {% endwith %}
 
-      {# 2) Resto colapsado #}
       {% if logs|length > 1 %}
         <div class="neu-collapse-wrap mt-2">
           <button class="btn btn-outline-secondary neu-btn-sm neu-collapse-btn"
@@ -219,7 +217,7 @@
     {% endif %}
   </div>
 
-  <!-- Subtareas (COLAPSABLE) -->
+  <!-- Subtareas -->
   <div class="card neu-card p-3 mb-3">
     <div class="neu-card-title d-flex justify-content-between align-items-center">
       <span>Subtareas</span>
@@ -236,117 +234,173 @@
             <th>Presupuesto</th>
             <th>Estado</th>
             <th>Adjunto</th>
+            <th>Comentarios</th>
             <th class="text-end">Acciones</th>
           </tr>
         </thead>
 
         {% if subtasks %}
-          {# 1) Primera fila visible #}
           <tbody>
-            {% with item=subtasks.0 %}
+            {% for item in subtasks %}
               {% with sub=item.obj %}
-                <tr>
-                  <td class="neu-td-strong">{{ sub.title }}</td>
-                  <td class="neu-muted">
-                    {% if sub.description %}{{ sub.description|truncatechars:90 }}{% else %}—{% endif %}
-                  </td>
-                  <td><span class="neu-badge">{{ sub.story_points }}</span></td>
-                  <td class="neu-td-strong"><strong>{{ sub.budget|cop }}</strong></td>
-                  <td><span class="neu-pill">{{ sub.get_status_display }}</span></td>
-                  <td>
-                    {% if sub.attachment %}
-                      <a class="neu-link-inline" href="{{ sub.attachment.url }}" target="_blank" rel="noopener">Ver</a>
-                    {% else %}
-                      <span class="neu-muted">—</span>
-                    {% endif %}
-                  </td>
-
-                  <td class="text-end">
-                    {% if item.can_manage %}
-                      <a href="{% url 'subtask_update' sub.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                    {% else %}
-                      <span class="neu-muted">—</span>
-                    {% endif %}
-
-                    {% if is_admin %}
-                      <form method="post" action="{% url 'subtask_delete' sub.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('¿Eliminar esta subtarea?');">
-                          Eliminar
-                        </button>
-                      </form>
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endwith %}
-            {% endwith %}
-          </tbody>
-
-          {# 2) Botón "ver más" + resto colapsado #}
-          {% if subtasks|length > 1 %}
-            <tbody>
               <tr>
-                <td colspan="7" class="text-center py-3">
-                  <button class="btn btn-outline-secondary neu-btn-sm neu-collapse-btn"
-                          type="button"
-                          data-bs-toggle="collapse"
-                          data-bs-target="#collapseSubtasks"
-                          aria-expanded="false"
-                          aria-controls="collapseSubtasks">
-                    Ver más subtareas ({{ subtasks|length|add:"-1" }})
-                  </button>
+                <td class="neu-td-strong">{{ sub.title }}</td>
+                <td class="neu-muted">
+                  {% if sub.description %}{{ sub.description|truncatechars:90 }}{% else %}—{% endif %}
+                </td>
+                <td><span class="neu-badge">{{ sub.story_points }}</span></td>
+                <td class="neu-td-strong"><strong>{{ sub.budget|cop }}</strong></td>
+                <td><span class="neu-pill">{{ sub.get_status_display }}</span></td>
+                <td>
+                  {% if sub.attachment %}
+                    <a class="neu-link-inline" href="{{ sub.attachment.url }}" target="_blank" rel="noopener">Ver</a>
+                  {% else %}
+                    <span class="neu-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- ✅ Comentarios -->
+                <td>
+                  {% if item.comments_total > 0 %}
+                    <div class="neu-cmt-preview">
+                      <div class="neu-cmt-meta">
+                        {% if item.first_comment.created_by %}
+                          {{ item.first_comment.created_by.get_full_name|default:item.first_comment.created_by.username }}
+                        {% else %}
+                          Sistema
+                        {% endif %}
+                        · {{ item.first_comment.created_at|date:"Y-m-d H:i" }}
+                      </div>
+                      <div class="neu-cmt-body">
+                        {{ item.first_comment.body|truncatechars:70 }}
+                      </div>
+
+                      <button type="button"
+                              class="btn btn-sm btn-outline-secondary mt-2"
+                              data-bs-toggle="modal"
+                              data-bs-target="#subtaskCommentsModal{{ sub.pk }}">
+                        Ver ({{ item.comments_total }})
+                      </button>
+                    </div>
+                  {% else %}
+                    <span class="neu-muted">—</span>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary ms-2"
+                            data-bs-toggle="modal"
+                            data-bs-target="#subtaskCommentsModal{{ sub.pk }}">
+                      Comentar
+                    </button>
+                  {% endif %}
+
+                  <!-- ✅ Modal comentarios -->
+                  <div class="modal fade" id="subtaskCommentsModal{{ sub.pk }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                      <div class="modal-content neu-modal">
+                        <div class="modal-header">
+                          <div>
+                            <div class="neu-modal-title">Comentarios – {{ sub.title }}</div>
+                            <div class="neu-muted small">Tarea: {{ task.title }}</div>
+                          </div>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+
+                        <div class="modal-body">
+                          {% if item.comments_total > 0 %}
+                            <div class="neu-cmt-card">
+                              <div class="neu-cmt-meta">
+                                {% if item.first_comment.created_by %}
+                                  {{ item.first_comment.created_by.get_full_name|default:item.first_comment.created_by.username }}
+                                {% else %}
+                                  Sistema
+                                {% endif %}
+                                · {{ item.first_comment.created_at|date:"Y-m-d H:i" }}
+                              </div>
+                              <div class="neu-cmt-body-full">
+                                {{ item.first_comment.body|linebreaksbr }}
+                              </div>
+                            </div>
+
+                            {% if item.comments_total > 1 %}
+                              <div class="mt-3">
+                                <button class="btn btn-outline-secondary neu-btn-sm"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapseMoreComments{{ sub.pk }}"
+                                        aria-expanded="false"
+                                        aria-controls="collapseMoreComments{{ sub.pk }}">
+                                  Ver más ({{ item.comments_total|add:"-1" }})
+                                </button>
+
+                                <div class="collapse mt-2" id="collapseMoreComments{{ sub.pk }}">
+                                  <div class="neu-cmt-stack">
+                                    {% for c in item.more_comments %}
+                                      <div class="neu-cmt-card">
+                                        <div class="neu-cmt-meta">
+                                          {% if c.created_by %}
+                                            {{ c.created_by.get_full_name|default:c.created_by.username }}
+                                          {% else %}
+                                            Sistema
+                                          {% endif %}
+                                          · {{ c.created_at|date:"Y-m-d H:i" }}
+                                        </div>
+                                        <div class="neu-cmt-body-full">
+                                          {{ c.body|linebreaksbr }}
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                          {% else %}
+                            <div class="neu-muted">Sin comentarios todavía.</div>
+                          {% endif %}
+
+                          <hr class="my-4" style="border-color: rgba(255,255,255,.12);">
+
+                          <div class="neu-card p-3">
+                            <div class="neu-card-title">Agregar comentario</div>
+                            <form method="post" action="{% url 'subtask_add_comment' sub.pk %}">
+                              {% csrf_token %}
+                              {{ item.comment_form.as_p }}
+                              <div class="d-flex justify-content-end gap-2">
+                                <button type="submit" class="btn btn-primary">Guardar comentario</button>
+                              </div>
+                            </form>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-end">
+                  {% if item.can_manage %}
+                    <a href="{% url 'subtask_update' sub.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                  {% else %}
+                    <span class="neu-muted">—</span>
+                  {% endif %}
+
+                  {% if is_admin %}
+                    <form method="post" action="{% url 'subtask_delete' sub.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              onclick="return confirm('¿Eliminar esta subtarea?');">
+                        Eliminar
+                      </button>
+                    </form>
+                  {% endif %}
                 </td>
               </tr>
-            </tbody>
-
-            <tbody class="collapse" id="collapseSubtasks">
-              {% for item in subtasks %}
-                {% if not forloop.first %}
-                  {% with sub=item.obj %}
-                    <tr>
-                      <td class="neu-td-strong">{{ sub.title }}</td>
-                      <td class="neu-muted">
-                        {% if sub.description %}{{ sub.description|truncatechars:90 }}{% else %}—{% endif %}
-                      </td>
-                      <td><span class="neu-badge">{{ sub.story_points }}</span></td>
-                      <td class="neu-td-strong"><strong>{{ sub.budget|cop }}</strong></td>
-                      <td><span class="neu-pill">{{ sub.get_status_display }}</span></td>
-                      <td>
-                        {% if sub.attachment %}
-                          <a class="neu-link-inline" href="{{ sub.attachment.url }}" target="_blank" rel="noopener">Ver</a>
-                        {% else %}
-                          <span class="neu-muted">—</span>
-                        {% endif %}
-                      </td>
-
-                      <td class="text-end">
-                        {% if item.can_manage %}
-                          <a href="{% url 'subtask_update' sub.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                        {% else %}
-                          <span class="neu-muted">—</span>
-                        {% endif %}
-
-                        {% if is_admin %}
-                          <form method="post" action="{% url 'subtask_delete' sub.pk %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Eliminar esta subtarea?');">
-                              Eliminar
-                            </button>
-                          </form>
-                        {% endif %}
-                      </td>
-                    </tr>
-                  {% endwith %}
-                {% endif %}
-              {% endfor %}
-            </tbody>
-          {% endif %}
+              {% endwith %}
+            {% endfor %}
+          </tbody>
         {% else %}
           <tbody>
             <tr>
-              <td colspan="7" class="text-center neu-muted py-4">No se han registrado subtareas.</td>
+              <td colspan="8" class="text-center neu-muted py-4">No se han registrado subtareas.</td>
             </tr>
           </tbody>
         {% endif %}

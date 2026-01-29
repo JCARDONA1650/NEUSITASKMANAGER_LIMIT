@@ -1,0 +1,218 @@
+Sistema de Notificaciones (Campana)
+
+NeusiTaskManager – Plan Free
+
+1. Objetivo del sistema
+
+El sistema de notificaciones tiene como objetivo:
+Informar eventos clave del flujo de trabajo sin depender de correos.
+Mantener alineados a responsables y roles administrativos.
+Reflejar el estado real del trabajo (asignación, entrega, corrección).
+Funcionar de forma centralizada, auditable y en tiempo real dentro de la app.
+
+Las notificaciones aparecen en una campana 🔔 en el navbar, con contador de no leídas, y un listado histórico accesible por el usuario.
+
+2. Arquitectura técnica
+2.1 Modelo de datos
+class Notification(models.Model):
+    recipient   # Usuario que recibe la notificación
+    actor       # Usuario que dispara el evento (opcional)
+    verb        # Tipo de evento (string corto)
+    title       # Título visible
+    message     # Mensaje detallado
+    url         # Ruta interna al detalle (task_detail)
+    is_read     # Estado leído / no leído
+    created_at  # Fecha de creación
+
+
+Características:
+
+Persistente en base de datos.
+Ordenada por created_at DESC.
+Compatible con múltiples receptores por evento.
+No depende de señales automáticas (control explícito desde views).
+2.2 Helpers de notificación (core/notifications.py)
+
+Funciones principales:
+
+notify_many(...)
+notify_task_assigned_new(...)
+notify_task_completed_to_admins(...)
+notify_task_returned_with_comment(...)
+
+Estas funciones NO importan views, evitando imports circulares.
+Las views importan los helpers de forma local.
+
+2.3 Context Processor
+
+Archivo: core/context_processors.py
+
+def notifications_context(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    unread = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False
+    ).count()
+
+    return {
+        "notif_unread": unread
+    }
+
+
+Esto permite:
+
+Mostrar el contador en todas las vistas
+Sin duplicar lógica en cada view
+
+Configurado en:
+
+TEMPLATES -> OPTIONS -> context_processors
+2.4 UI – Navbar (Campana)
+Visible solo si el usuario está autenticado.
+Muestra badge si hay notificaciones no leídas.
+
+Redirige a /notifications/.
+
+Ejemplo:
+
+<a href="{% url 'notifications_list' %}">
+  🔔
+  <span class="neu-bell-badge">{{ notif_unread }}</span>
+</a>
+
+3. Reglas funcionales de notificación (CORE)
+🔹 Regla 1 – Asignación de tarea nueva
+
+Condición
+
+Un usuario con rol tipo admin crea una tarea
+Asigna responsables
+La tarea queda en estado NEW
+
+Resultado
+
+🔔 Se notifica a todos los responsables
+❌ No se notifica al actor (si también es responsable)
+
+Función
+
+notify_task_assigned_new(task, actor)
+🔹 Regla 2 – Tarea completada
+
+Condición
+
+Cualquier usuario (admin o no)
+Cambia el estado a COMPLETED
+Desde Kanban o desde Task Detail
+
+Resultado
+
+🔔 Se notifica a todos los roles tipo admin
+❌ No se notifica al actor
+❌ No se notifica a responsables
+
+Función
+
+notify_task_completed_to_admins(task, actor)
+
+🔹 Regla 3 – Corrección / devolución de tarea
+
+Condición
+
+Usuario admin
+
+Cambia estado de COMPLETED → IN_PROGRESS
+Agrega comentario obligatorio (solo en Kanban)
+
+Resultado
+
+🔔 Se notifica a todos los responsables
+
+Incluye comentario de corrección
+
+❌ No se notifica al actor
+
+Función
+
+notify_task_returned_with_comment(task, actor, comment)
+
+4. Diferencia entre Kanban y Task Detail
+🔸 Kanban (task_move)
+
+Permite:
+
+Avanzar y retroceder estados
+Agregar comentario obligatorio al retroceder
+
+Dispara:
+
+Regla 2
+Regla 3
+
+🔸 Task Detail (task_update_status)
+
+Cambio simple de estado vía select
+No tiene campo comentario
+
+Dispara:
+
+✅ Regla 2 (COMPLETED)
+❌ Regla 3 (no aplica aquí)
+
+Esto es intencional, para forzar correcciones documentadas desde Kanban.
+
+5. Comportamiento con múltiples responsables
+
+Si una tarea tiene varios responsables:
+
+Regla 1 → todos reciben notificación
+Regla 3 → todos reciben notificación
+
+El actor siempre se excluye, incluso si es responsable.
+
+6. Vista de Notificaciones
+
+Ruta:
+
+/notifications/
+
+
+Funciones:
+
+Ver historial
+Ver no leídas
+Marcar individual como leída
+Marcar todas como leídas
+No hay borrado físico (auditoría implícita).
+
+7. Consideraciones del Plan Free
+
+No hay push en tiempo real (WebSockets).
+No hay emails.
+Todo es in-app.
+Persistente pero sin reglas complejas por usuario.
+
+Escalable a:
+
+WebSockets
+Emails
+Preferencias por usuario
+Notificaciones por subtareas
+
+8. Decisiones de diseño (importantes)
+
+❌ No se usan signals automáticos
+✅ Las notificaciones se disparan solo donde el negocio lo exige
+✅ Imports locales para evitar ciclos
+✅ Reglas explícitas y auditables
+✅ UX clara: campana = “algo requiere tu atención”
+
+9. Glosario rápido
+
+Actor: Usuario que provoca el evento
+Recipient: Usuario que recibe la notificación
+Verb: Tipo técnico del evento
+Admin-like: admin, leader, scrum, superuser
+Responsable: Usuario asignado a una tarea
