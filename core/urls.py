@@ -38,6 +38,8 @@ from core.views import (
 
     # Matrices
     matrix_priority, matrix_status, export_matrix_pdf,
+    # Help
+    help_page,
 )
 
 urlpatterns = [
@@ -131,4 +133,11 @@ urlpatterns = [
     path("matrix/priority/", matrix_priority, name="matrix_priority"),
     path("matrix/status/", matrix_status, name="matrix_status"),
     path("matrix/priority/export/", export_matrix_pdf, name="export_matrix_pdf"),
+
+    # ------------------------------------------------------------------
+    # HELP
+    # ------------------------------------------------------------------
+    path("help/", help_page, name="help_page"),
+
+    
 ]
