@@ -5,6 +5,8 @@ from .home_views import home
 from .project_views import project_list, project_create, project_update, project_delete
 from .sprint_views import sprint_list, sprint_create, sprint_update, sprint_delete
 from .epic_views import epic_list, epic_create, epic_update, epic_delete
+from .help_views import help_page
+
 
 from .task_views import (
     task_list,
