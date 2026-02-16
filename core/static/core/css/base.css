@@ -157,7 +157,7 @@ body.neu-body{
   color: var(--neu-text);
 }
 
-/* Cards (cuando uses .card normal de Bootstrap) */
+/* Cards */
 .card{
   background: var(--neu-card);
   border: 1px solid var(--neu-border);
@@ -216,54 +216,47 @@ body.neu-body{
 .form-label{
   color: rgba(234,231,242,.78);
 }
+
 /* =========================
    FIX: Dropdown clickeable (z-index / overflow)
    ========================= */
-
-/* Navbar siempre arriba */
 .neu-navbar{
-  position: sticky;   /* si no quieres sticky, cambia a: position: relative; */
+  position: sticky;
   top: 0;
   z-index: 5000;
 }
 
-/* Importante: que no recorte el dropdown */
 .neu-navbar,
 .neu-navbar .container-fluid,
 .neu-navbar .navbar-collapse{
   overflow: visible !important;
 }
 
-/* Dropdown por encima de todo */
 .neu-navbar .dropdown-menu{
   z-index: 6000 !important;
   position: absolute;
 }
 
-/* A veces Bootstrap mete un transform en navbar/collapse y crea stacking context raro */
 .neu-navbar .navbar-collapse,
 .neu-navbar .navbar-nav,
 .neu-navbar .dropdown{
   transform: none !important;
 }
 
-/* Fondo del dropdown más sólido para que no “se mezcle” visualmente */
 .neu-dropdown{
   background: rgba(20,10,35,.98) !important;
   border: 1px solid rgba(255,255,255,.14) !important;
   box-shadow: 0 22px 60px rgba(0,0,0,.65) !important;
 }
 
-/* Asegura que los items siempre reciban click */
 .neu-dropdown,
 .neu-dropdown *{
   pointer-events: auto;
 }
+
 /* =====================================================
    FIX GLOBAL SELECT / DROPDOWN (texto oscuro)
    ===================================================== */
-
-/* Select cerrado */
 select,
 .form-select {
   background-color: rgba(255,255,255,0.08) !important;
@@ -271,36 +264,31 @@ select,
   border: 1px solid rgba(255,255,255,0.18);
 }
 
-/* Opciones desplegadas */
 select option {
   background-color: #1a1a24 !important;
   color: #ffffff !important;
 }
 
-/* Hover y seleccionado */
 select option:hover,
 select option:checked {
   background-color: #6c2bd9 !important;
   color: #ffffff !important;
 }
 
-/* Fix Firefox */
 select:-moz-focusring {
   color: transparent;
   text-shadow: 0 0 0 #ffffff;
 }
 
-/* Focus */
 select:focus,
 .form-select:focus {
   box-shadow: 0 0 0 0.2rem rgba(182,107,255,.35);
   border-color: rgba(182,107,255,.8);
 }
+
 /* =========================
    LOGO EN NAVBAR
    ========================= */
-
-/* Logo imagen */
 .neu-logo {
   height: 45px;
   width: auto;
@@ -312,13 +300,11 @@ select:focus,
   transition: all 0.3s ease;
 }
 
-/* Hover effect en logo */
 .neu-brand:hover .neu-logo {
   filter: drop-shadow(0 0 12px rgba(182, 107, 255, 0.6));
   transform: scale(1.05);
 }
 
-/* Responsive - logo más pequeño en móvil */
 @media (max-width: 768px) {
   .neu-logo {
     height: 32px;
@@ -326,7 +312,6 @@ select:focus,
   }
 }
 
-/* Variante: Si quieres el logo circular */
 .neu-logo.circular {
   border-radius: 50%;
   border: 2px solid rgba(182, 107, 255, 0.3);
@@ -334,7 +319,6 @@ select:focus,
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Variante: Si quieres SOLO logo (sin punto ni texto) */
 .neu-brand.logo-only {
   gap: 0;
 }
@@ -347,4 +331,165 @@ select:focus,
 .neu-brand.logo-only .neu-logo {
   height: 45px;
   max-width: 45px;
+}
+
+/* =========================
+   🔔 BELL (NOTIFICACIONES)
+   ========================= */
+.neu-bell{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .55rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.neu-bell-icon{
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.neu-bell-badge{
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 .35rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .70rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(182,107,255,.95);
+  border: 1px solid rgba(255,255,255,.20);
+  box-shadow: 0 10px 20px rgba(0,0,0,.35);
+}
+/* =========================
+   Notificaciones (campana)
+   ========================= */
+
+.neu-bell-wrap { position: relative; }
+
+.neu-bell-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .55rem !important;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+
+.neu-bell-btn:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.neu-bell-ico{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(234,231,242,.92);
+}
+
+.neu-bell-badge{
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .70rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(239,68,68,.95);
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 12px 24px rgba(0,0,0,.35);
+}
+
+.neu-bell-dd{
+  width: 320px;
+  max-width: 92vw;
+}
+
+.neu-btn-soft{
+  border-radius: 12px !important;
+}
+
+.neu-bell-dd__head{
+  color: #fff !important;
+}
+
+/* =========================
+   Notifications list page
+   ========================= */
+
+.neu-notifs, .neu-notifs *{
+  color: #fff !important;
+}
+
+.neu-notifs__title{
+  font-weight: 900;
+}
+
+.neu-notifs__meta{
+  opacity: .75;
+}
+
+.neu-notif-item{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: rgba(0,0,0,.14);
+  margin-bottom: 10px;
+}
+
+.neu-notif-item.is-unread{
+  background: rgba(182,107,255,.10);
+  border-color: rgba(182,107,255,.22);
+}
+
+.neu-notif-item__title{
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.neu-notif-item__msg{
+  opacity: .90;
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
+
+.neu-notif-item__time{
+  opacity: .65;
+  font-size: .82rem;
+  margin-top: 8px;
+}
+
+.neu-dot-unread{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 8px;
+  background: rgba(182,107,255,.95);
+  box-shadow: 0 0 0 4px rgba(182,107,255,.18);
+}
+
+.neu-notifs__empty{
+  opacity: .75;
+  padding: 12px 6px;
 }

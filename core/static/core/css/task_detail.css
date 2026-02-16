@@ -22,7 +22,7 @@
 .neu-detail-actions{
   display: flex;
   gap: .5rem;
-  flex-wrap: wrap;
+  flex-wrap: wrap;  
 }
 
 .neu-btn-sm{
@@ -50,7 +50,7 @@
 }
 
 .neu-tag strong{
-  color: rgba(234,231,242,.78);
+  color: rgba(246, 245, 248, 0.78);
   font-weight: 700;
 }
 
@@ -283,4 +283,24 @@
 .neu-table td.neu-td-strong *{
   color: #ffffff !important;
   font-weight: 800;
+}
+
+/* ===== FIX TEXTO GRIS → BLANCO NEGRILLA ===== */
+.neu-history-comment {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.neu-history-item .neu-muted {
+  color: rgba(234, 231, 242, .90) !important;
+  font-weight: 700 !important;
+}
+
+/* Textos "vacíos" como "No hay archivos cargados" */
+.neu-card .neu-muted,
+td.neu-muted,
+.neu-desc .neu-muted,
+p.neu-muted {
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }

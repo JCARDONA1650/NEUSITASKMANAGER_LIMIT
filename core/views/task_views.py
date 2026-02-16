@@ -12,8 +12,23 @@ from django.db.models import Q  # type: ignore
 from django.http import HttpRequest, HttpResponse, JsonResponse  # type: ignore
 from django.shortcuts import get_object_or_404, redirect, render  # type: ignore
 
-from core.forms import SubTaskForm, TaskForm
-from core.models import Project, Sprint, SubTask, Task, TaskStatusLog, PlanLimits, check_tasks_limit_or_raise
+from core.forms import (
+    SubTaskAttachmentsForm,
+    SubTaskCommentForm,
+    SubTaskForm,
+    TaskForm,
+)
+from core.models import (
+    PlanLimits,
+    Project,
+    Sprint,
+    SubTask,
+    SubTaskAttachment,
+    SubTaskComment,
+    Task,
+    TaskStatusLog,
+    check_tasks_limit_or_raise,
+)
 from core.views.permissions import group_required, is_admin
 
 User = get_user_model()
@@ -22,16 +37,13 @@ User = get_user_model()
 # -----------------------------
 # Helpers
 # -----------------------------
-
 @dataclass
 class ProjectGroup:
     project: Project
     total: int
-
     tasks_new: list[Task]
     tasks_in_progress: list[Task]
     tasks_completed: list[Task]
-
     count_new: int
     count_in_progress: int
     count_completed: int
@@ -44,7 +56,6 @@ def _group_tasks_by_project_and_status(tasks: Iterable[Task]) -> list[ProjectGro
     for t in tasks:
         pid = t.project_id
         project_obj[pid] = t.project
-
         if pid not in by_project:
             by_project[pid] = {"new": [], "in_progress": [], "completed": []}
 
@@ -77,13 +88,13 @@ def _group_tasks_by_project_and_status(tasks: Iterable[Task]) -> list[ProjectGro
 
 
 def _files_count() -> int:
-    return SubTask.objects.exclude(Q(attachment="") | Q(attachment__isnull=True)).count()
+    return SubTaskAttachment.objects.count()
 
 
-def _check_files_limit_or_raise():
+def _check_files_limit_or_raise(extra_files: int = 1) -> None:
     limits = PlanLimits.get_solo()
     total_files = _files_count()
-    if total_files >= limits.max_files:
+    if total_files + int(extra_files) > limits.max_files:
         raise ValidationError(
             "Su sesión free no alcanza para seguir cargando archivos. "
             "Contacte con su proveedor de software para cambiar el plan."
@@ -93,7 +104,6 @@ def _check_files_limit_or_raise():
 # -----------------------------
 # Views
 # -----------------------------
-
 @login_required
 def task_list(request: HttpRequest) -> HttpResponse:
     user = request.user
@@ -164,13 +174,17 @@ def task_create(request: HttpRequest) -> HttpResponse:
         form = TaskForm(request.POST)
         if form.is_valid():
             try:
-                # 🔒 LÍMITE FREE
                 check_tasks_limit_or_raise(Task)
 
                 obj = form.save(commit=False)
                 obj.created_by = request.user
                 obj.save()
                 form.save_m2m()
+
+                # Notificaciones (si existen en tu proyecto)
+                if obj.status == Task.Status.NEW and obj.responsibles.exists():
+                    from core.notifications import notify_task_assigned_new
+                    notify_task_assigned_new(obj, request.user)
 
                 messages.success(request, "Tarea principal creada correctamente.")
                 return redirect("task_list")
@@ -202,29 +216,26 @@ def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
     for sub in subtasks_qs:
         can_edit_sub = admin_user or sub.created_by_id == request.user.id or is_task_responsible
         can_delete_sub = admin_user
-        subtasks.append(
-            {
-                "obj": sub,
-                "can_manage": can_edit_sub,
-                "can_edit": can_edit_sub,
-                "can_delete": can_delete_sub,
-            }
-        )
+        subtasks.append({"obj": sub, "can_manage": can_edit_sub, "can_edit": can_edit_sub, "can_delete": can_delete_sub})
 
-    # Crear subtarea desde el detalle (incluye archivo)
+    # Crear subtarea + multi-archivos desde detalle
     if request.method == "POST":
-        sub_form = SubTaskForm(request.POST, request.FILES)
-        if sub_form.is_valid():
+        sub_form = SubTaskForm(request.POST)
+        files_form = SubTaskAttachmentsForm(request.POST, request.FILES)
+
+        if sub_form.is_valid() and files_form.is_valid():
             try:
                 sub = sub_form.save(commit=False)
-
-                # 🔒 Si intenta subir archivo, validar cupo
-                if sub.attachment:
-                    _check_files_limit_or_raise()
-
                 sub.created_by = request.user
                 sub.task = task
                 sub.save()
+
+                files = files_form.cleaned_data.get("attachments") or []
+                if files:
+                    _check_files_limit_or_raise(extra_files=len(files))
+                    SubTaskAttachment.objects.bulk_create(
+                        [SubTaskAttachment(subtask=sub, uploaded_by=request.user, file=f) for f in files]
+                    )
 
                 messages.success(request, "Subtarea creada correctamente.")
                 return redirect("task_detail", pk=task.pk)
@@ -232,9 +243,11 @@ def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
             except ValidationError as e:
                 msg = e.message if hasattr(e, "message") else str(e)
                 messages.error(request, msg)
-        # si no válido, sigue y renderiza con errores
+        else:
+            messages.error(request, "Revisa los campos / archivos.")
     else:
         sub_form = SubTaskForm()
+        files_form = SubTaskAttachmentsForm()
 
     return render(
         request,
@@ -243,6 +256,7 @@ def task_detail(request: HttpRequest, pk: int) -> HttpResponse:
             "task": task,
             "subtasks": subtasks,
             "sub_form": sub_form,
+            "files_form": files_form,
             "can_manage_task": can_manage_task,
             "is_task_responsible": is_task_responsible,
             "logs": logs,
@@ -282,10 +296,7 @@ def task_move(request: HttpRequest, pk: int) -> JsonResponse:
         return JsonResponse({"ok": True})
 
     if not admin_user:
-        allowed_forward = {
-            Task.Status.NEW: Task.Status.IN_PROGRESS,
-            Task.Status.IN_PROGRESS: Task.Status.COMPLETED,
-        }
+        allowed_forward = {Task.Status.NEW: Task.Status.IN_PROGRESS, Task.Status.IN_PROGRESS: Task.Status.COMPLETED}
         if old_status not in allowed_forward or allowed_forward[old_status] != new_status:
             return JsonResponse({"ok": False, "error": "Solo puedes avanzar al siguiente estado"}, status=403)
 
@@ -307,6 +318,15 @@ def task_move(request: HttpRequest, pk: int) -> JsonResponse:
         comment=comment if admin_user else "",
         created_by=user,
     )
+
+    # Notificaciones (si existen)
+    from core.notifications import notify_task_completed_to_admins, notify_task_returned_with_comment
+
+    if new_status == Task.Status.COMPLETED and old_status != Task.Status.COMPLETED:
+        notify_task_completed_to_admins(task, user)
+
+    if admin_user and old_status == Task.Status.COMPLETED and new_status == Task.Status.IN_PROGRESS and comment:
+        notify_task_returned_with_comment(task, user, comment)
 
     return JsonResponse({"ok": True})
 
@@ -349,54 +369,112 @@ def task_update_status(request: HttpRequest, pk: int) -> HttpResponse:
         raise PermissionDenied("No tienes permiso para actualizar esta tarea.")
 
     new_status = request.POST.get("status")
-    if new_status in dict(Task.Status.choices):
-        task.status = new_status  # type: ignore
-        task.save(update_fields=["status"])
-        messages.success(request, "Estado actualizado.")
-    else:
+    if new_status not in dict(Task.Status.choices):
         messages.error(request, "Estado inválido.")
+        return redirect("task_detail", pk=pk)
 
+    old_status = task.status
+    if new_status == old_status:
+        messages.info(request, "No hubo cambios de estado.")
+        return redirect("task_detail", pk=pk)
+
+    task.status = new_status  # type: ignore
+    task.save(update_fields=["status"])
+
+    TaskStatusLog.objects.create(
+        task=task,
+        from_status=old_status,
+        to_status=new_status,
+        comment="",
+        created_by=request.user,
+    )
+
+    from core.notifications import notify_task_completed_to_admins
+    if new_status == Task.Status.COMPLETED and old_status != Task.Status.COMPLETED:
+        notify_task_completed_to_admins(task, request.user)
+
+    messages.success(request, "Estado actualizado.")
     return redirect("task_detail", pk=pk)
 
 
 # ---------- CRUD SubTask ----------
-
 @login_required
 def subtask_update(request: HttpRequest, pk: int) -> HttpResponse:
     sub = get_object_or_404(SubTask, pk=pk)
     task = sub.task
 
-    can = (
-        is_admin(request.user)
-        or sub.created_by_id == request.user.id
-        or task.responsibles.filter(id=request.user.id).exists()
-    )
+    can = is_admin(request.user) or sub.created_by_id == request.user.id or task.responsibles.filter(id=request.user.id).exists()
     if not can:
         raise PermissionDenied("No tienes permiso para editar esta subtarea.")
 
     if request.method == "POST":
-        form = SubTaskForm(request.POST, request.FILES, instance=sub)
-        if form.is_valid():
-            try:
-                # 🔒 Si está subiendo archivo nuevo (antes no tenía y ahora sí), validar cupo
-                new_file = request.FILES.get("attachment")
-                if new_file and not sub.attachment:
-                    _check_files_limit_or_raise()
+        action = request.POST.get("action", "save")
 
-                form.save()
-                messages.success(request, "Subtarea actualizada.")
-                return redirect("task_detail", pk=task.pk)
+        form = SubTaskForm(request.POST, instance=sub)
+        files_form = SubTaskAttachmentsForm(request.POST, request.FILES)
+        comment_form = SubTaskCommentForm(request.POST)
 
-            except ValidationError as e:
-                msg = e.message if hasattr(e, "message") else str(e)
-                messages.error(request, msg)
+        try:
+            if action == "save":
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Subtarea actualizada.")
+                else:
+                    messages.error(request, "Revisa los campos.")
+                return redirect("subtask_update", pk=sub.pk)
+
+            if action == "upload":
+                if files_form.is_valid():
+                    files = files_form.cleaned_data.get("attachments") or []
+                    if files:
+                        _check_files_limit_or_raise(extra_files=len(files))
+                        SubTaskAttachment.objects.bulk_create(
+                            [SubTaskAttachment(subtask=sub, uploaded_by=request.user, file=f) for f in files]
+                        )
+                        messages.success(request, "Archivos agregados.")
+                    else:
+                        messages.info(request, "No seleccionaste archivos.")
+                else:
+                    messages.error(request, "Archivos inválidos.")
+                return redirect("subtask_update", pk=sub.pk)
+
+            if action == "comment":
+                if comment_form.is_valid():
+                    SubTaskComment.objects.create(
+                        subtask=sub,
+                        author=request.user,
+                        text=comment_form.cleaned_data["text"],
+                    )
+                    messages.success(request, "Comentario agregado.")
+                else:
+                    messages.error(request, "Comentario inválido.")
+                return redirect("subtask_update", pk=sub.pk)
+
+        except ValidationError as e:
+            msg = e.message if hasattr(e, "message") else str(e)
+            messages.error(request, msg)
+
     else:
         form = SubTaskForm(instance=sub)
+        files_form = SubTaskAttachmentsForm()
+        comment_form = SubTaskCommentForm()
+
+    attachments = sub.attachments.all()
+    comments = sub.comments.select_related("author").all()
 
     return render(
         request,
         "core/subtask_form.html",
-        {"form": form, "edit": True, "subtask": sub, "task": task},
+        {
+            "form": form,
+            "edit": True,
+            "subtask": sub,
+            "task": task,
+            "attachments": attachments,
+            "comments": comments,
+            "files_form": files_form,
+            "comment_form": comment_form,
+        },
     )
 
 
@@ -413,8 +491,33 @@ def subtask_delete(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Subtarea eliminada correctamente.")
         return redirect("task_detail", pk=task.pk)
 
+    return render(request, "core/confirm_delete.html", {"object": sub, "type": "Subtarea"})
+@login_required
+def subtask_attachment_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    attachment = get_object_or_404(SubTaskAttachment, pk=pk)
+    sub = attachment.subtask
+    task = sub.task
+
+    # Permisos: admin o creador del attachment o creador de subtarea o responsable de la tarea
+    can = (
+        is_admin(request.user)
+        or (attachment.uploaded_by_id == request.user.id)
+        or (sub.created_by_id == request.user.id)
+        or task.responsibles.filter(id=request.user.id).exists()
+    )
+    if not can:
+        raise PermissionDenied("No tienes permiso para eliminar este archivo.")
+
+    if request.method == "POST":
+        # borra el archivo físico y el registro
+        attachment.file.delete(save=False)
+        attachment.delete()
+        messages.success(request, "Archivo eliminado.")
+        return redirect("subtask_update", pk=sub.pk)
+
+    # Confirmación simple reutilizando tu confirm_delete.html
     return render(
         request,
         "core/confirm_delete.html",
-        {"object": sub, "type": "Subtarea"},
+        {"object": attachment, "type": "Archivo"},
     )

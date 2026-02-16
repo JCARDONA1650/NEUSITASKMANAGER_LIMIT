@@ -125,14 +125,13 @@ class UserCreateForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password1"])
 
         role = self.cleaned_data["role"]
-        _apply_role_to_user(user, role)
 
         if commit:
-            user.save()
-            # IMPORTANT: groups M2M requiere usuario guardado
-            _apply_role_to_user(user, role)
+            user.save()  # 👈 PRIMERO GUARDAR
+            _apply_role_to_user(user, role)  # 👈 DESPUÉS tocar groups
 
         return user
+
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -212,11 +211,9 @@ class UserUpdateForm(forms.ModelForm):
         user = super().save(commit=False)
         role = self.cleaned_data.get("role") or "normal"
 
-        _apply_role_to_user(user, role)
-
         if commit:
-            user.save()
-            _apply_role_to_user(user, role)
+            user.save()                 # 👈 ya tiene ID
+            _apply_role_to_user(user, role)  # 👈 ahora sí puede tocar groups
 
         return user
 

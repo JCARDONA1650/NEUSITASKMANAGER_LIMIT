@@ -25,7 +25,7 @@ from core.views import (
     task_update_status, task_move,
 
     # Subtasks
-    subtask_update, subtask_delete,
+    subtask_update, subtask_delete,subtask_attachment_delete,
 
     # Daily
     daily_list, daily_create, daily_bulk_delete,
@@ -39,7 +39,9 @@ from core.views import (
     # Matrices
     matrix_priority, matrix_status, export_matrix_pdf,
     # Help
-    help_page,
+    help_page,  
+    #notificaciones
+    notifications_read_all,notifications_list,notification_read  
 )
 
 urlpatterns = [
@@ -106,6 +108,8 @@ urlpatterns = [
     # ------------------------------------------------------------------
     path("subtasks/<int:pk>/edit/", subtask_update, name="subtask_update"),
     path("subtasks/<int:pk>/delete/", subtask_delete, name="subtask_delete"),
+    path("subtasks/attachment/<int:pk>/delete/", subtask_attachment_delete, name="subtask_attachment_delete"),
+
 
     # ------------------------------------------------------------------
     # DAILY
@@ -138,6 +142,15 @@ urlpatterns = [
     # HELP
     # ------------------------------------------------------------------
     path("help/", help_page, name="help_page"),
+
+
+    # ------------------------------------------------------------------
+    # NOTIFICACIONES
+    # ------------------------------------------------------------------
+
+    path("notifications/", notifications_list, name="notifications_list"),
+    path("notifications/<int:pk>/read/", notification_read, name="notification_read"),
+    path("notifications/read-all/", notifications_read_all, name="notifications_read_all"),
 
     
 ]

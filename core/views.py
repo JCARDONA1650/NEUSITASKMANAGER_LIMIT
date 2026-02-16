@@ -463,3 +463,5 @@ def export_matrix_pdf(request: HttpRequest) -> HttpResponse:
     p.save()
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='matriz_prioridad.pdf')
+
+

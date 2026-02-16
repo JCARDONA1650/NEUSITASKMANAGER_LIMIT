@@ -18,6 +18,7 @@ from .task_views import (
     task_move,
     subtask_update,
     subtask_delete,
+    subtask_attachment_delete
 )
 
 from .daily_views import daily_list, daily_create, daily_bulk_delete
@@ -33,3 +34,5 @@ from .user_admin_views import user_list, user_create, user_update, user_set_pass
 from .dashboard_views import dashboard
 
 from .matrix_views import matrix_priority, matrix_status, export_matrix_pdf
+
+from .notifications_views import notification_read,notifications_list,notifications_read_all

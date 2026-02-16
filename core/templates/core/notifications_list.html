@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+<div class="neu-notifs card p-3">
+  <div class="neu-notifs__head d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h3 class="mb-0 neu-notifs__title">Notificaciones</h3>
+      <div class="neu-notifs__meta">No leídas: <b>{{ unread }}</b></div>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary neu-btn-soft" href="{% url 'notifications_read_all' %}">Marcar todo leído</a>
+    </div>
+  </div>
+
+  <div class="neu-notifs__list mt-3">
+    {% for n in items %}
+      <div class="neu-notif-item {% if not n.is_read %}is-unread{% endif %}">
+        <div class="neu-notif-item__left">
+          <div class="neu-notif-item__title">
+            {% if not n.is_read %}<span class="neu-dot-unread" aria-hidden="true"></span>{% endif %}
+            {{ n.title }}
+          </div>
+
+          {% if n.message %}
+            <div class="neu-notif-item__msg">{{ n.message|linebreaksbr }}</div>
+          {% endif %}
+
+          <div class="neu-notif-item__time">{{ n.created_at|date:"Y-m-d H:i" }}</div>
+        </div>
+
+        <div class="neu-notif-item__right">
+          <a class="btn btn-sm btn-outline-primary neu-btn-soft" href="{% url 'notification_read' n.pk %}">Abrir</a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="neu-notifs__empty">No hay notificaciones.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

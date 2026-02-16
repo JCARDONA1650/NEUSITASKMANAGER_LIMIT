@@ -1,48 +1,37 @@
 """
 Forms for the NeusiTaskManager core application.
-
-These forms derive from Django's ModelForm and encapsulate
-validation logic for each model. Where appropriate, custom
-clean methods are implemented to enforce business rules such as
-the free tier limits (PlanLimits).
 """
 from __future__ import annotations
+
+import os
+from typing import Any
 
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils import timezone
 
-from .models import Availability, Daily, Epic, Project, Sprint, SubTask, Task
+from .models import (
+    Availability,
+    Daily,
+    Epic,
+    PlanLimits,
+    Project,
+    Sprint,
+    SubTask,
+    SubTaskAttachment,
+    SubTaskComment,
+    Task,
+)
 
-# Intentar usar PlanLimits (nuevo). Si no existe por migraciones, cae a settings.
-try:
-    from .models import PlanLimits
-except Exception:  # pragma: no cover
-    PlanLimits = None  # type: ignore
 
-
-def _limits():
-    """
-    Devuelve un dict con los límites FREE.
-    Prioridad:
-      1) PlanLimits (admin editable)
-      2) settings.* (fallback)
-    """
-    if PlanLimits is not None:
-        try:
-            pl = PlanLimits.get_solo()
-            return {
-                "max_projects": pl.max_projects,
-                "max_tasks": pl.max_tasks,
-            }
-        except Exception:
-            pass
-
-    # fallback por si aún no aplicaste migraciones
+def _limits() -> dict[str, int]:
+    pl = PlanLimits.get_solo()
     return {
-        "max_projects": getattr(settings, "FREE_MAX_PROJECTS", 10),
-        "max_tasks": getattr(settings, "FREE_MAX_TASKS", 50),  # si no existe, usar 50
+        "max_projects": int(pl.max_projects),
+        "max_tasks": int(pl.max_tasks),
+        "max_files": int(pl.max_files),
     }
 
 
@@ -52,14 +41,7 @@ def _limits():
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = [
-            "name",
-            "description",
-            "budget",
-            "start_date",
-            "end_date",
-            "members",
-        ]
+        fields = ["name", "description", "budget", "start_date", "end_date", "members"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
             "start_date": forms.DateInput(attrs={"type": "date"}),
@@ -69,17 +51,11 @@ class ProjectForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-
         lim = _limits()
-        max_projects = int(lim["max_projects"])
-
-        # SOLO aplicar el límite cuando se CREA (no al editar)
-        if not self.instance or not self.instance.pk:
-            if Project.objects.count() >= max_projects:
-                raise ValidationError(
-                    f"Se alcanzó el máximo de proyectos ({max_projects}) "
-                    "permitido en la versión gratuita. Elimine un proyecto o contacte soporte."
-                )
+        if not self.instance.pk and Project.objects.count() >= lim["max_projects"]:
+            raise ValidationError(
+                f"Se alcanzó el máximo de proyectos ({lim['max_projects']}) en la versión gratuita."
+            )
         return cleaned_data
 
 
@@ -103,9 +79,7 @@ class EpicForm(forms.ModelForm):
     class Meta:
         model = Epic
         fields = ["project", "name", "description"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
-        }
+        widgets = {"description": forms.Textarea(attrs={"rows": 3})}
 
 
 # ---------------------------------------------------------------------
@@ -120,33 +94,26 @@ class TaskForm(forms.ModelForm):
             "sprint",
             "title",
             "description",
-            "kpis", 
-            "story_points",   # ✅ ENUM (1,2,3,5,8,13,21)
+            "kpis",
+            "story_points",
             "budget",
             "status",
-            "priority",       # ✅ Matriz Eisenhower real
+            "priority",
             "responsibles",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
-            "kpis": forms.Textarea(attrs={"rows": 3, "placeholder": "Ej: Tiempo, % avance, entregables, calidad, SLA..."}),
+            "kpis": forms.Textarea(attrs={"rows": 3, "placeholder": "Ej: Tiempo, % avance, entregables..."}),
             "responsibles": forms.SelectMultiple(attrs={"class": "form-select"}),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-
         lim = _limits()
-        max_tasks = int(lim["max_tasks"])
-
-        # SOLO aplicar límite al CREAR
-        if not self.instance or not self.instance.pk:
-            if Task.objects.count() >= max_tasks:
-                raise ValidationError(
-                    f"Se alcanzó el máximo de tareas principales ({max_tasks}) "
-                    "permitido en la versión gratuita. Elimine tareas o contacte soporte."
-                )
-
+        if not self.instance.pk and Task.objects.count() >= lim["max_tasks"]:
+            raise ValidationError(
+                f"Se alcanzó el máximo de tareas principales ({lim['max_tasks']}) en la versión gratuita."
+            )
         return cleaned_data
 
 
@@ -156,75 +123,100 @@ class TaskForm(forms.ModelForm):
 class SubTaskForm(forms.ModelForm):
     class Meta:
         model = SubTask
-        fields = [
-            "title",
-            "description",
-            "story_points",   # ✅ Máx 7
-            "budget",
-            "status",
-            "attachment",
-        ]
+        fields = ["title", "description", "story_points", "budget", "status"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "description": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "story_points": forms.Select(attrs={"class": "form-select"}),
+            "budget": forms.NumberInput(attrs={"class": "form-control"}),
+            "status": forms.Select(attrs={"class": "form-select"}),
         }
-
-    def clean_attachment(self):
-        f = self.cleaned_data.get("attachment")
-        if not f:
-            return f
-
-        # 1) Extensión permitida
-        import os
-        ext = os.path.splitext(f.name)[1].lower()
-        allowed_exts = getattr(settings, "ALLOWED_UPLOAD_EXTS", {".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx", ".xlsx"})
-        if ext not in allowed_exts:
-            raise ValidationError(
-                f"Extensión no permitida ({ext}). Permitidas: {', '.join(sorted(allowed_exts))}"
-            )
-
-        # 2) Tamaño máximo por archivo (FREE)
-        max_mb = int(getattr(settings, "FREE_MAX_FILE_SIZE_MB", 8))
-        max_bytes = max_mb * 1024 * 1024
-        if f.size > max_bytes:
-            raise ValidationError(
-                f"El archivo supera el límite de {max_mb}MB permitido en la versión gratuita."
-            )
-
-        # 3) Cupo total por cantidad (PlanLimits.max_files si existe)
-        try:
-            from .models import PlanLimits
-            limits = PlanLimits.get_solo()
-            max_files = int(limits.max_files)
-        except Exception:
-            max_files = int(getattr(settings, "FREE_MAX_FILES", 1000))
-
-        from django.db.models import Q
-        total_files = SubTask.objects.exclude(Q(attachment="") | Q(attachment__isnull=True)).count()
-
-        # Si estamos editando y ya tenía archivo, no sumar doble
-        if self.instance and self.instance.pk and getattr(self.instance, "attachment", None):
-            had_file = bool(self.instance.attachment)
-        else:
-            had_file = False
-
-        if not had_file and total_files >= max_files:
-            raise ValidationError(
-                "Su sesión free no alcanza para seguir cargando archivos. "
-                "Contacte con su proveedor de software para cambiar el plan."
-            )
-
-        return f
 
     def clean_budget(self):
         budget = self.cleaned_data.get("budget") or 0
         task: Task | None = getattr(self.instance, "task", None)
-
         if task and budget > task.remaining_budget:
             raise ValidationError(
-                f"El presupuesto de la subtarea ({budget}) excede el presupuesto restante "
-                f"de la tarea ({task.remaining_budget})."
+                f"El presupuesto de la subtarea ({budget}) excede el presupuesto restante de la tarea ({task.remaining_budget})."
             )
         return budget
+
+
+# ---------------------------------------------------------------------
+# MULTI FILE UPLOAD (CORRECTO: acepta lista de archivos)
+# ---------------------------------------------------------------------
+class MultiFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    widget = MultiFileInput
+
+    def clean(self, data, initial=None):
+        # data puede ser UploadedFile o lista[UploadedFile]
+        if data in (None, "", []):
+            return []
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+        cleaned_files = []
+        for f in data:
+            cleaned_files.append(super().clean(f, initial))
+        return cleaned_files
+
+
+class SubTaskAttachmentsForm(forms.Form):
+    attachments = MultipleFileField(required=False)
+
+    def clean(self):
+        cleaned = super().clean()
+        files = cleaned.get("attachments") or []
+        if not files:
+            return cleaned
+
+        allowed_exts = getattr(
+            settings,
+            "ALLOWED_UPLOAD_EXTS",
+            {".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx", ".xlsx"},
+        )
+
+        max_mb = int(getattr(settings, "FREE_MAX_FILE_SIZE_MB", 8))
+        max_bytes = max_mb * 1024 * 1024
+
+        lim = _limits()
+        max_files = int(lim["max_files"])
+
+        total_files = SubTaskAttachment.objects.count()
+        if total_files + len(files) > max_files:
+            raise ValidationError(
+                "Su sesión free no alcanza para seguir cargando archivos. Contacte con su proveedor."
+            )
+
+        for f in files:
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in allowed_exts:
+                raise ValidationError(
+                    f"Extensión no permitida ({ext}). Permitidas: {', '.join(sorted(allowed_exts))}"
+                )
+            if f.size > max_bytes:
+                raise ValidationError(
+                    f"El archivo '{f.name}' supera el límite de {max_mb}MB permitido en la versión gratuita."
+                )
+
+        return cleaned
+
+
+# ---------------------------------------------------------------------
+# COMMENTS
+# ---------------------------------------------------------------------
+class SubTaskCommentForm(forms.ModelForm):
+    class Meta:
+        model = SubTaskComment
+        fields = ["text"]
+        widgets = {
+            "text": forms.Textarea(
+                attrs={"rows": 3, "class": "form-control", "placeholder": "Escribe un comentario..."}
+            ),
+        }
 
 
 # ---------------------------------------------------------------------
@@ -254,37 +246,23 @@ class DailyForm(forms.ModelForm):
 class AvailabilityForm(forms.ModelForm):
     class Meta:
         model = Availability
-        fields = [
-            "title",
-            "description",
-            "start_datetime",
-            "end_datetime",
-            "link",
-        ]
+        fields = ["title", "description", "start_datetime", "end_datetime", "link"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 2}),
-            "start_datetime": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
-            ),
-            "end_datetime": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
-            ),
+            "start_datetime": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "end_datetime": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
 
         self.fields["start_datetime"].input_formats = ["%Y-%m-%dT%H:%M"]
         self.fields["end_datetime"].input_formats = ["%Y-%m-%dT%H:%M"]
 
-        # Si estamos editando, formatear las fechas correctamente
         if self.instance and self.instance.pk:
             if self.instance.start_datetime:
                 local_start = timezone.localtime(self.instance.start_datetime)
                 self.fields["start_datetime"].initial = local_start.strftime("%Y-%m-%dT%H:%M")
-
             if self.instance.end_datetime:
                 local_end = timezone.localtime(self.instance.end_datetime)
                 self.fields["end_datetime"].initial = local_end.strftime("%Y-%m-%dT%H:%M")
@@ -293,9 +271,6 @@ class AvailabilityForm(forms.ModelForm):
         cleaned_data = super().clean()
         start = cleaned_data.get("start_datetime")
         end = cleaned_data.get("end_datetime")
-
         if start and end and start >= end:
-            raise ValidationError(
-                "La fecha/hora de inicio debe ser anterior a la fecha/hora de finalización."
-            )
+            raise ValidationError("La fecha/hora de inicio debe ser anterior a la fecha/hora de finalización.")
         return cleaned_data

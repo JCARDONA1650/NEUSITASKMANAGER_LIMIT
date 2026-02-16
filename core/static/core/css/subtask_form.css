@@ -100,3 +100,7 @@
   color: rgba(234,231,242,.62);
   font-size: .85rem;
 }
+.neu-muted {
+  color: rgba(234, 231, 242, 0.85) !important;
+  font-weight: 700 !important;
+}
