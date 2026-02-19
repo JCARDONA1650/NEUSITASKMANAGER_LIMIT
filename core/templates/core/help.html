@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load role_tags %}
 
 {% block title %}Ayuda{% endblock %}
 
@@ -22,7 +21,7 @@
   <!-- ===================================================== -->
   <!-- ADMIN -->
   <!-- ===================================================== -->
-  {% if user|has_group:"admin" or user.is_superuser %}
+  {% if user.is_superuser %}
 
   <div class="card neu-card p-4 mb-4">
     <h4 class="neu-section-title">Ayuda para Administradores</h4>
@@ -73,48 +72,7 @@
   </div>
 
   <!-- ===================================================== -->
-  <!-- LEADER / SCRUM -->
-  <!-- ===================================================== -->
-  {% elif user|has_group:"leader" or user|has_group:"scrum" %}
-
-  <div class="card neu-card p-4 mb-4">
-    <h4 class="neu-section-title">Ayuda para Líderes o Scrum</h4>
-
-    <p>
-      Este rol está enfocado en la gestión diaria del trabajo del equipo.
-      Puedes organizar tareas, hacer seguimiento y asegurar que el sprint avance correctamente.
-    </p>
-
-    <ul>
-      <li>Puedes crear y administrar tareas operativas del equipo.</li>
-      <li>Puedes actualizar estados y gestionar subtareas.</li>
-      <li>Puedes usar las matrices para organizar prioridades.</li>
-      <li>Puedes consultar el dashboard para revisar avances generales.</li>
-    </ul>
-
-    <hr>
-
-    <h5>Restricciones del rol</h5>
-    <ul>
-      <li>No puedes crear usuarios ni modificar roles.</li>
-      <li>No tienes control total sobre la estructura global del sistema.</li>
-    </ul>
-
-    <hr>
-
-    <h5>Situaciones comunes</h5>
-    <ul>
-      <li>
-        Si no ves el menú de usuarios, es porque esa función es exclusiva del administrador.
-      </li>
-      <li>
-        Si una tarea no avanza, revisa si tiene subtareas pendientes o presupuesto insuficiente.
-      </li>
-    </ul>
-  </div>
-
-  <!-- ===================================================== -->
-  <!-- USUARIO NORMAL -->
+  <!-- OTROS USUARIOS -->
   <!-- ===================================================== -->
   {% else %}
 
@@ -122,7 +80,7 @@
     <h4 class="neu-section-title">Ayuda para Usuarios</h4>
 
     <p>
-      Como usuario normal, tu acceso está enfocado únicamente en ejecutar tareas asignadas.
+      Como usuario, tu acceso está enfocado principalmente en ejecutar tareas asignadas.
       No necesitas configurar proyectos, solo trabajar sobre tus pendientes.
     </p>
 
@@ -179,6 +137,57 @@
       <li><strong>Daily:</strong> reporte diario del progreso.</li>
       <li><strong>Disponibilidad:</strong> registro de ausencias, reuniones o bloqueos.</li>
     </ul>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- NOTIFICACIONES -->
+  <!-- ===================================================== -->
+  <div class="card neu-card p-4 mb-4">
+    <h4 class="neu-section-title">Notificaciones</h4>
+
+    <p>
+      El sistema cuenta con un apartado de notificaciones representado por una campana 
+      en la parte superior derecha. Este espacio permite estar informado sobre eventos importantes
+      dentro de las tareas y subtareas del proyecto.
+    </p>
+
+    <hr>
+
+    <h5>¿Qué tipo de notificaciones existen?</h5>
+
+    <ul>
+      <li>
+        Cuando un usuario es asignado o participa en una subtarea, el sistema genera una notificación
+        indicando que ahora forma parte de esa actividad.
+      </li>
+
+      <li>
+        Cuando una subtarea delegada es marcada como completada por otro miembro del equipo,
+        se notificará automáticamente para mantener el seguimiento del progreso.
+      </li>
+
+      <li>
+        Los usuarios reciben principalmente notificaciones cuando se les delega una subtarea
+        para que la desarrollen o participen en ella.
+      </li>
+    </ul>
+
+    <hr>
+
+    <h5>Opciones dentro del apartado</h5>
+
+    <p>
+      En el panel de notificaciones todos los usuarios pueden acceder a dos secciones:
+    </p>
+
+    <ul>
+      <li><strong>Ver todas las notificaciones:</strong> muestra el historial completo.</li>
+      <li><strong>Ver notificaciones leídas:</strong> permite revisar únicamente las ya vistas.</li>
+    </ul>
+
+    <p>
+      Esto facilita mantener el control del trabajo sin perder eventos importantes dentro del sistema.
+    </p>
   </div>
 
 </div>
